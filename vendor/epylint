@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+
+import re
+import sys
+
+from subprocess import *
+
+MSG_RE = r"\[(?P<msg>[WCREF][0-9]+)(, (?P<func>.+?))?\]"
+
+p = Popen('pylint -i y -f parseable -r n --disable-msg=W0312 %s' %
+          sys.argv[1], shell = True, stdout = PIPE).stdout
+
+for line in p:
+    match = re.search(MSG_RE, line)
+    if match:
+        msg = match.group('msg')
+        func = match.group('func')
+        if msg[0] == 'E' or msg[0] == 'F':
+            type_ = 'Error'
+        else:
+            type_ = 'Warning'
+
+        if func:
+            line = re.sub(MSG_RE, '%s [%s] (%s):' % (type_, msg, func), line)
+        else:
+            line = re.sub(MSG_RE, '%s [%s]:' % (type_, msg), line)
+
+        print line,
+
+p.close()

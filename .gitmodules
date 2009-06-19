@@ -1,0 +1,6 @@
+[submodule "vendor/magit"]
+	path = vendor/magit
+	url = git://gitorious.org/magit/mainline.git
+[submodule "vendor/anything-config"]
+	path = vendor/anything-config
+	url = git://repo.or.cz/anything-config.git

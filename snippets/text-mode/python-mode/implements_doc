@@ -1,0 +1,10 @@
+# -*- coding: utf-8 -*-
+# name: implements_doc
+# contributor: Väinö järvelä
+# --
+Make sure that the ``${1:ClassName}`` implements the
+``${2:interface}`` interface::
+
+  >>> from zope.interface.verify import verifyClass
+  >>> verifyClass($2, $1)
+  True
