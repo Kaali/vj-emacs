@@ -1,3 +1,3 @@
-(setq save-place-file (concat "/places"))
+(setq save-place-file (concat dotfiles-dir "places"))
 (setq-default save-place t)
 (require 'saveplace)
