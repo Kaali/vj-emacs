@@ -57,6 +57,7 @@
 (load-library "vj-anything")
 (load-library "vj-haskell")
 (load-library "vj-rst")
+(load-library "vj-saveplace")
 
 ;; Keep last as it requires some of the previous libraries loaded
 (load-library "vj-keyboard")
