@@ -48,3 +48,7 @@
 
 ;; Allow shortcuts for yes/no questions
 (defalias 'yes-or-no-p 'y-or-n-p)
+
+;; Don't clutter up directories with backup files
+(setq backup-directory-alist `(("." . ,(expand-file-name
+                                        (concat dotfiles-dir "backups")))))
