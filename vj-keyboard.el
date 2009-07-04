@@ -72,3 +72,6 @@
 
 ;; Use IBuffer
 (global-set-key (kbd "C-x C-b") 'ibuffer)
+
+;; Remember
+(global-set-key (kbd "C-c M-r") 'remember)

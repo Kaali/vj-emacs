@@ -59,6 +59,8 @@
 (load-library "vj-rst")
 (load-library "vj-saveplace")
 (load-library "vj-recentf")
+(load-library "vj-evernote")
+(load-library "vj-remember")
 
 ;; Keep last as it requires some of the previous libraries loaded
 (load-library "vj-keyboard")
