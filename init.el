@@ -32,6 +32,7 @@
 
 
 ;; Load libaries
+(load-library "vj-misc")
 (load-library "vj-icicles")
 (load-library "vj-functions")
 (load-library "vj-text-mode")
@@ -44,7 +45,6 @@
 (load-library "vj-dired")
 (load-library "vj-nxml")
 (load-library "vj-org")
-(load-library "vj-misc")
 (load-library "vj-osx")
 (load-library "vj-cua")
 (load-library "vj-magit")
