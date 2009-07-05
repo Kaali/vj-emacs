@@ -17,6 +17,10 @@
                     start (1+ end))))
         (concat "\"" result (substring argument start) "\""))))
 
+(defun vj-to-applescript-list (tags)
+  "Convert lisp list to Applescript list"
+  (concat "{" (mapconcat 'applescript-quote-string tags ",") "}"))
+
 (defun vj-send-to-evernote (title text tags)
   "Create a new note in Evernote using Applescript"
   (let ((etitle (applescript-quote-string title))
