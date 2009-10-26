@@ -7,13 +7,13 @@
 ;; Copyright (C) 1996-2009, Drew Adams, all rights reserved.
 ;; Created: Mon Feb 27 09:24:28 2006
 ;; Version: 22.0
-;; Last-Updated: Sat Jan  3 11:49:34 2009 (-0800)
+;; Last-Updated: Thu Oct 22 09:43:17 2009 (-0700)
 ;;           By: dradams
-;;     Update #: 395
+;;     Update #: 517
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/icicles-mac.el
 ;; Keywords: internal, extensions, help, abbrev, local, minibuffer,
 ;;           keys, apropos, completion, matching, regexp, command
-;; Compatibility: GNU Emacs 20.x, GNU Emacs 21.x, GNU Emacs 22.x
+;; Compatibility: GNU Emacs: 20.x, 21.x, 22.x, 23.x
 ;;
 ;; Features that might be required by this library:
 ;;
@@ -24,12 +24,15 @@
 ;;; Commentary:
 ;;
 ;;  This is a helper library for library `icicles.el'.  It defines
-;;  macros.  See `icicles.el' for documentation.
+;;  macros.  For Icicles documentation, see `icicles-doc1.el' and
+;;  `icicles-doc2.el'.
 ;;
 ;;  Macros defined here:
 ;;
-;;    `icicle-define-add-to-alist-command', `icicle-define-command',
-;;    `icicle-define-file-command', `icicle-define-sort-command'.
+;;    `icicle-buffer-bindings', `icicle-define-add-to-alist-command',
+;;    `icicle-define-command', `icicle-define-file-command',
+;;    `icicle-define-sort-command', `icicle-file-bindings',
+;;    `icicle-with-selected-window'.
 ;;
 ;;  Functions defined here:
 ;;
@@ -99,19 +102,68 @@
   (defvar minibuffer-message-timeout 2)
   (defvar minibuffer-prompt-properties nil))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Quiet the byte-compiler.
+(defvar icicle-inhibit-try-switch-buffer)
+(defvar read-file-name-completion-ignore-case)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
 ;;(@* "Macros")
 
 ;;; Macros -----------------------------------------------------------
+
+(if (fboundp 'with-selected-window)     ; Emacs 22+
+    (fset 'icicle-with-selected-window (symbol-function 'with-selected-window))
+  (defmacro icicle-with-selected-window (window &rest body)
+    "Execute the forms in BODY with WINDOW as the selected window.
+The value returned is the value of the last form in BODY.
+
+This macro saves and restores the selected window, as well as the
+selected window of each frame.  It does not change the order of
+recently selected windows.  If the previously selected window of
+some frame is no longer live at the end of BODY, that frame's
+selected window is left alone.  If the selected window is no
+longer live, then whatever window is selected at the end of BODY
+remains selected.
+
+This macro uses `save-current-buffer' to save and restore the
+current buffer, since otherwise its normal operation could
+potentially make a different buffer current.  It does not alter
+the buffer list ordering."
+    (when (fboundp 'declare) (declare (indent 1) (debug t)))
+    ;; Most of this code is a copy of save-selected-window.
+    `(let ((save-selected-window-window (selected-window))
+           ;; It is necessary to save all of these, because calling
+           ;; select-window changes frame-selected-window for whatever
+           ;; frame that window is in.
+           (save-selected-window-alist
+            (mapcar (lambda (frame) (list frame (frame-selected-window frame)))
+             (frame-list))))
+      (save-current-buffer
+        (unwind-protect
+             (progn (if (> emacs-major-version 21)
+                        (select-window ,window 'norecord) ; Emacs 22+
+                      (select-window ,window))
+                    ,@body)
+          (dolist (elt save-selected-window-alist)
+            (and (frame-live-p (car elt))
+                 (window-live-p (cadr elt))
+                 (if (> emacs-major-version 22)
+                     (set-frame-selected-window (car elt) (cadr elt) 'norecord) ; Emacs 23+
+                   (set-frame-selected-window (car elt) (cadr elt)))))
+          (when (window-live-p save-selected-window-window)
+            (if (> emacs-major-version 21)
+                (select-window save-selected-window-window 'norecord) ; Emacs 22+
+              (select-window save-selected-window-window))))))))
 
 (defmacro icicle-define-add-to-alist-command (command doc-string construct-item-fn alist-var
                                               &optional dont-save)
   "Define COMMAND that adds an item to an alist user option.
 Any items with the same key are first removed from the alist.
 DOC-STRING is the doc string of COMMAND.
-CONSTRUCT-ITEM-FN is a function that constructs the new item.  It reads user input.
+CONSTRUCT-ITEM-FN is a function that constructs the new item.
+  It reads user input.
 ALIST-VAR is the alist user option.
 Optional arg DONT-SAVE non-nil means do not call
 `customize-save-variable' to save the updated variable."
@@ -119,10 +171,72 @@ Optional arg DONT-SAVE non-nil means do not call
     ,(concat doc-string "\n\nNote: Any items with the same key are first removed from the alist.")
     (interactive)
     (let ((new-item  (funcall ,construct-item-fn)))
-      (setq ,alist-var (icicle-assoc-delete-all (car new-item) ,alist-var))
+      (setq ,alist-var  (icicle-assoc-delete-all (car new-item) ,alist-var))
       (push new-item ,alist-var)
       ,(unless dont-save `(customize-save-variable ',alist-var ,alist-var))
       (message "Added to `%s': `%S'" ',alist-var new-item))))
+
+(defmacro icicle-buffer-bindings (&optional more-bindings)
+  "Bindings to use in multi-command definitions for buffer names.
+MORE-BINDINGS is a list of additional bindings, which are created
+before the others."
+  `(,@more-bindings
+    (completion-ignore-case           (or (and (boundp 'read-buffer-completion-ignore-case)
+                                           read-buffer-completion-ignore-case)
+                                       completion-ignore-case))
+    (icicle-must-match-regexp         icicle-buffer-match-regexp)
+    (icicle-must-not-match-regexp     icicle-buffer-no-match-regexp)
+    (icicle-must-pass-predicate       icicle-buffer-predicate)
+    (icicle-require-match-flag        icicle-buffer-require-match-flag)
+    (icicle-extra-candidates          icicle-buffer-extras)
+    (icicle-transform-function        'icicle-remove-dups-if-extras)
+    (icicle-sort-function             (or icicle-buffer-sort icicle-sort-function))
+    (icicle-sort-functions-alist
+     (append (list
+              '("by last access")       ; Renamed from "turned OFF'.
+              '("*...* last" . icicle-buffer-sort-*...*-last)
+              '("by buffer size" . icicle-buffer-smaller-p)
+              '("by major mode name" . icicle-major-mode-name-less-p)
+              (and (fboundp 'icicle-mode-line-name-less-p)
+               '("by mode-line mode name" . icicle-mode-line-name-less-p))
+              '("by file/process name" . icicle-buffer-file/process-name-less-p))
+      (delete '("turned OFF") icicle-sort-functions-alist)))
+    (icicle-ignore-space-prefix-flag  icicle-buffer-ignore-space-prefix-flag)
+    (icicle-candidate-alt-action-fn
+     (or icicle-candidate-alt-action-fn (icicle-alt-act-fn-for-type "buffer")))
+    (icicle-all-candidates-list-alt-action-fn
+     (or icicle-all-candidates-list-alt-action-fn (icicle-alt-act-fn-for-type "buffer")))
+    (icicle-delete-candidate-object   'icicle-kill-a-buffer) ; `S-delete' kills current buffer.
+    (bufflist
+     (if current-prefix-arg
+         (if (wholenump (prefix-numeric-value current-prefix-arg))
+             (icicle-remove-if-not #'(lambda (bf) (buffer-file-name bf)) (buffer-list))
+           (cdr (assq 'buffer-list (frame-parameters))))
+       (buffer-list)))))
+
+(defmacro icicle-file-bindings (&optional more-bindings)
+  "Bindings to use in multi-command definitions for file names.
+MORE-BINDINGS is a list of additional bindings, which are created
+before the others."
+  `(,@more-bindings
+    (completion-ignore-case           (or (and (boundp 'read-file-name-completion-ignore-case)
+                                           read-file-name-completion-ignore-case)
+                                       completion-ignore-case))
+    (icicle-must-match-regexp         icicle-file-match-regexp)
+    (icicle-must-not-match-regexp     icicle-file-no-match-regexp)
+    (icicle-must-pass-predicate       icicle-file-predicate)
+    (icicle-require-match-flag        icicle-file-require-match-flag)
+    (icicle-extra-candidates          icicle-file-extras)
+    (icicle-transform-function        'icicle-remove-dups-if-extras)
+    (icicle-sort-function             (or icicle-file-sort icicle-sort-function))
+    (icicle-ignore-space-prefix-flag  icicle-buffer-ignore-space-prefix-flag)
+    (icicle-candidate-alt-action-fn
+     (or icicle-candidate-alt-action-fn (icicle-alt-act-fn-for-type "file")))
+    (icicle-all-candidates-list-alt-action-fn
+     (or icicle-all-candidates-list-alt-action-fn (icicle-alt-act-fn-for-type "file")))
+    (icicle-delete-candidate-object   'icicle-delete-file-or-directory) ; `S-delete' deletes file.
+    (icicle-default-value               ; Let user get default via `M-n', but don't insert it.
+     (and (memq icicle-default-value '(t nil)) icicle-default-value))))
 
 (defmacro icicle-define-command
     (command doc-string function prompt collection &optional
@@ -146,6 +260,9 @@ BINDINGS is a list of `let*' bindings added around the command code.
 
   `orig-buff'   is bound to (current-buffer)
   `orig-window' is bound to (selected-window)
+BINDINGS is macroexpanded, so it can also be a macro call that expands
+to a list of bindings.  For example, you can use
+`icicle-buffer-bindings' here.
 
 In case of user quit (`C-g') or error, an attempt is made to restore
 the original buffer.
@@ -172,11 +289,11 @@ In order, the created command does this:
 
 The created command also binds `icicle-candidate-action-fn' to a
 function that calls FUNCTION on the current completion candidate.
-Note that BINDINGS are of course not in effect within
+Note that the BINDINGS are of course not in effect within
 `icicle-candidate-action-fn'."
   `(defun ,command ()
     ,(concat doc-string "\n\nRead input, then "
-             (and (symbolp function) (concat "call `" (symbol-name function) "' to "))
+             (and (symbolp function) (concat "call `" (symbol-name function) "'\nto "))
              "act on it.
 
 Input-candidate completion and cycling are available.  While cycling,
@@ -203,7 +320,7 @@ This is an Icicles command - see command `icicle-mode'.")
     ,(and (not not-interactive-p) '(interactive))
     (let* ((orig-buff    (current-buffer))
            (orig-window  (selected-window))
-           ,@bindings
+           ,@(macroexpand bindings)
            (icicle-candidate-action-fn
             (lambda (candidate)
               (let ((minibuffer-completion-table      minibuffer-completion-table)
@@ -251,7 +368,7 @@ This is an Icicles command - see command `icicle-mode'.")
           (let ((cmd-choice  (completing-read ,prompt ,collection ,predicate ,require-match
                                               ,initial-input ,hist ,def ,inherit-input-method)))
             ;; Reset after reading input, so that commands can tell whether input has been read.
-            (setq icicle-candidate-action-fn nil)
+            (setq icicle-candidate-action-fn  nil)
             (funcall ',function cmd-choice))
         (quit  (icicle-try-switch-buffer orig-buff) ,undo-sexp)
         (error (icicle-try-switch-buffer orig-buff) ,undo-sexp
@@ -280,6 +397,9 @@ BINDINGS is a list of `let*' bindings added around the command code.
 
   `orig-buff'   is bound to (current-buffer)
   `orig-window' is bound to (selected-window)
+BINDINGS is macroexpanded, so it can also be a macro call that expands
+to a list of bindings.  For example, you can use
+`icicle-buffer-bindings' here.
 
 In case of user quit (`C-g') or error, an attempt is made to restore
 the original buffer.
@@ -305,11 +425,11 @@ In order, the created command does this:
 
 The created command also binds `icicle-candidate-action-fn' to a
 function that calls FUNCTION on the current completion candidate.
-Note that BINDINGS are of course not in effect within
+Note that the BINDINGS are of course not in effect within
 `icicle-candidate-action-fn'."
   `(defun ,command ()
     ,(concat doc-string "\n\nRead input, then "
-             (and (symbolp function) (concat "call `" (symbol-name function) "' to "))
+             (and (symbolp function) (concat "call `" (symbol-name function) "'\nto "))
              "act on it.
 
 Input-candidate completion and cycling are available.  While cycling,
@@ -336,7 +456,7 @@ This is an Icicles command - see command `icicle-mode'.")
     ,(and (not not-interactive-p) '(interactive))
     (let* ((orig-buff    (current-buffer))
            (orig-window  (selected-window))
-           ,@bindings
+           ,@(macroexpand bindings)
            (icicle-candidate-action-fn
             (lambda (candidate)
               (let ((minibuffer-completion-table      minibuffer-completion-table)
@@ -357,8 +477,8 @@ This is an Icicles command - see command `icicle-mode'.")
                                                            minibuffer-prompt-properties))
                     (minibuffer-setup-hook            minibuffer-setup-hook)
                     (minibuffer-text-before-history   minibuffer-text-before-history))
-                (setq candidate (expand-file-name candidate
-                                                  (file-name-directory icicle-last-input)))
+                (setq candidate  (expand-file-name
+                                  candidate (icicle-file-name-directory icicle-last-input)))
                 (condition-case in-action-fn
                     ;; Treat 3 cases, because previous use of `icicle-candidate-action-fn'
                     ;; might have deleted the file or the window.
@@ -389,7 +509,7 @@ This is an Icicles command - see command `icicle-mode'.")
                    (read-file-name ,prompt ,dir ,default-filename ,require-match
                                    ,initial-input ,predicate))))
             ;; Reset after reading input, so that commands can tell whether input has been read.
-            (setq icicle-candidate-action-fn nil) ; Reset after completion.
+            (setq icicle-candidate-action-fn  nil) ; Reset after completion.
             (funcall ',function file-choice))
         (quit  (icicle-try-switch-buffer orig-buff) ,undo-sexp)
         (error (icicle-try-switch-buffer orig-buff) ,undo-sexp
@@ -409,17 +529,17 @@ COMPARISON-FN is a function that compares two strings, returning
  non-nil if and only if the first string sorts before the second.
 
 DOC-STRING is the doc string of the new command."
-  (unless (stringp sort-order) (setq sort-order (symbol-name sort-order)))
+  (unless (stringp sort-order) (setq sort-order  (symbol-name sort-order)))
   (let ((command  (intern (concat "icicle-sort-"
                                   (replace-regexp-in-string "\\s-+" "-" sort-order)))))
     `(progn
-      (setq icicle-sort-functions-alist (icicle-assoc-delete-all
-                                         ,sort-order icicle-sort-functions-alist))
+      (setq icicle-sort-functions-alist  (icicle-assoc-delete-all
+                                          ,sort-order icicle-sort-functions-alist))
       (push (cons ,sort-order ',comparison-fn) icicle-sort-functions-alist)
       (defun ,command ()
         ,doc-string
         (interactive)
-        (setq icicle-sort-function #',comparison-fn)
+        (setq icicle-sort-function  #',comparison-fn)
         (message "Sorting is now %s" ,sort-order)
         (icicle-complete-again-update)))))
  
@@ -473,7 +593,7 @@ DOC-STRING is the doc string of the new command."
 ;; `lisp-interaction-mode-hook'."
 ;;   (unless (assoc "cl-indent" load-history) (load "cl-indent" nil t))
 ;;   (set (make-local-variable 'lisp-indent-function) 'common-lisp-indent-function)
-;;   (setq lisp-indent-maximum-backtracking 10)
+;;   (setq lisp-indent-maximum-backtracking  10)
 ;;   (put 'define-derived-mode 'common-lisp-indent-function '(4 4 4 2 &body))
 ;;   (put 'if 'common-lisp-indent-function '(nil nil &body))
 ;;   (put 'icicle-define-command 'common-lisp-indent-function '(4 &body))

@@ -7,12 +7,12 @@
 ;; Copyright (C) 2004-2009, Drew Adams, all rights reserved.
 ;; Created: Mon Sep 20 22:58:45 2004
 ;; Version: 21.0
-;; Last-Updated: Sun Dec 28 14:35:47 2008 (-0800)
+;; Last-Updated: Thu Aug  6 18:26:27 2009 (-0700)
 ;;           By: dradams
-;;     Update #: 579
+;;     Update #: 586
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/hexrgb.el
 ;; Keywords: number, hex, rgb, color, background, frames, display
-;; Compatibility: GNU Emacs 20.x, GNU Emacs 21.x, GNU Emacs 22.x
+;; Compatibility: GNU Emacs: 20.x, 21.x, 22.x, 23.x
 ;;
 ;; Features that might be required by this library:
 ;;
@@ -146,6 +146,9 @@
 ;; warnings about variables and functions with prefix `eyedrop-' when you byte-compile
 ;; `hexrgb.el'.  You can ignore these warnings.
 
+(defvar eyedrop-picked-foreground)
+(defvar eyedrop-picked-background)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -159,6 +162,7 @@
                                        (and window-system (mapcar #'list (x-defined-colors))))
   "Alist of all supported colors, for use in completion.")
 
+;; RMS added this function to Emacs (23) as `read-color', with some feature loss.
 ;;;###autoload
 (defun hexrgb-read-color (&optional convert-to-RGB-p allow-empty-name-p prompt)
   "Read a color name or RGB hex value: #RRRRGGGGBBBB.

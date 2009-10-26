@@ -7,27 +7,27 @@
 ;; Copyright (C) 1996-2009, Drew Adams, all rights reserved.
 ;; Created: Mon Feb 27 09:19:43 2006
 ;; Version: 22.0
-;; Last-Updated: Tue Jan 13 21:02:04 2009 (-0800)
+;; Last-Updated: Sat Aug  1 15:32:21 2009 (-0700)
 ;;           By: dradams
-;;     Update #: 493
+;;     Update #: 503
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/icicles-face.el
 ;; Keywords: internal, extensions, help, abbrev, local, minibuffer,
 ;;           keys, apropos, completion, matching, regexp, command
-;; Compatibility: GNU Emacs 20.x, GNU Emacs 21.x, GNU Emacs 22.x
+;; Compatibility: GNU Emacs: 20.x, 21.x, 22.x, 23.x
 ;;
 ;; Features that might be required by this library:
 ;;
 ;;   `cl', `color-theme', `cus-face', `easymenu', `ffap', `ffap-',
-;;   `hexrgb', `icicles-opt', `kmacro', `thingatpt', `thingatpt+',
-;;   `wid-edit', `widget'.
+;;   `hexrgb', `icicles-opt', `kmacro', `levenshtein', `thingatpt',
+;;   `thingatpt+', `wid-edit', `widget'.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Commentary:
 ;;
 ;;  This is a helper library for library `icicles.el'.  It defines
-;;  customization groups and faces.  See `icicles.el' for
-;;  documentation.
+;;  customization groups and faces.  For Icicles documentation, see
+;;  `icicles-doc1.el' and `icicles-doc2.el'.
 ;;
 ;;  Groups defined here:
 ;;
@@ -48,7 +48,7 @@
 ;;    `icicle-historical-candidate', `icicle-input-completion-fail',
 ;;    `icicle-input-completion-fail-lax',
 ;;    `icicle-match-highlight-Completions',
-;;    `icicle-match-highlight-minibuffer',
+;;    `icicle-match-highlight-minibuffer', `icicle-mode-line-help',
 ;;    `icicle-multi-command-completion',
 ;;    `icicle-mustmatch-completion', `icicle-proxy-candidate',
 ;;    `icicle-saved-candidate', `icicle-search-context-level-1',
@@ -372,6 +372,12 @@ This means that they belong to list `icicle-extra-candidates'."
 (defface icicle-match-highlight-minibuffer '((t (:underline t)))
   "*Face used to highlight root that was completed, in minibuffer."
   :group 'Icicles-Minibuffer-Display :group 'faces)
+
+(defface icicle-mode-line-help
+  '((((background dark)) (:foreground "#AC4AAC4A0000")) ; a dark yellow
+    (t (:foreground "Blue")))
+  "*Face used to highlight help shown in the mode-line."
+  :group 'Icicles-Completions-Display :group 'Icicles-Miscellaneous :group 'faces)
 
 (defface icicle-multi-command-completion
     '((((background dark)) ; a dark cyan on a dark magenta

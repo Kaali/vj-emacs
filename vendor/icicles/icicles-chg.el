@@ -7,13 +7,13 @@
 ;; Copyright (C) 2007-2009, Drew Adams, all rights reserved.
 ;; Created: Tue Nov 27 07:47:53 2007
 ;; Version: 22.0
-;; Last-Updated: Fri Jan 23 20:48:57 2009 (-0800)
+;; Last-Updated: Sun Oct 25 21:32:13 2009 (-0700)
 ;;           By: dradams
-;;     Update #: 3127
+;;     Update #: 4555
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/icicles-chg.el
 ;; Keywords: extensions, help, abbrev, local, minibuffer,
 ;;           keys, apropos, completion, matching, regexp, command
-;; Compatibility: GNU Emacs 20.x, GNU Emacs 21.x, GNU Emacs 22.x
+;; Compatibility: GNU Emacs: 20.x, 21.x, 22.x, 23.x
 ;;
 ;; Features that might be required by this library:
 ;;
@@ -61,7 +61,8 @@
 ;;  headings throughout this file.  You can get `linkd.el' here:
 ;;  http://dto.freeshell.org/notebook/Linkd.html.
 ;;
-;;  (@> "CHANGE LOG FOR `icicles-cmd.el'")
+;;  (@> "CHANGE LOG FOR `icicles-cmd1.el'")
+;;  (@> "CHANGE LOG FOR `icicles-cmd2.el'")
 ;;  (@> "CHANGE LOG FOR `icicles-face.el'")
 ;;  (@> "CHANGE LOG FOR `icicles-fn.el'")
 ;;  (@> "CHANGE LOG FOR `icicles-mac.el'")
@@ -70,1456 +71,138 @@
 ;;  (@> "CHANGE LOG FOR `icicles-opt.el'")
 ;;  (@> "CHANGE LOG FOR `icicles-var.el'")
 ;;  (@> "CHANGE LOG FOR `icicles.el'")
+;;  (@> "CHANGE LOG FOR `icicles-cmd.el'" - Deprecated file)
  
-;;;(@* "CHANGE LOG FOR `icicles-cmd.el'")
+;;;(@* "CHANGE LOG FOR `icicles-cmd1.el'")
 ;;
-;; 2009/01/18 dadams
-;;     icicle-dired-saved-file-candidates(-other-window):
-;;       If there is no saved set, then use icicle-file-list to let user choose a set.
-;;     Added: icicle-dired-chosen-files(-other-window), as aliases.
-;; 2009/01/14 dadams
-;;     Same commands as yesterday: icicle-remove-duplicates -> icicle-remove-dups-if-extras.
-;; 2009/01/13 dadams
-;;     icicle-kill-buffer, icicle-buffer(-other-window), icicle-(buffer|file|directory)-list,
-;;       icicle-find-file(-absolute)(-other-window), icicle-(recent|locate)-file(-other-window),
-;;       icicle-choose-candidate-of-type:
-;;         Bind icicle-transform-function to icicle-remove-duplicates.
-;; 2009/01/05 dadams
-;;     Added: icicle-gud-gdb-complete-command.
-;;     icicle-shell-dynamic-complete(-as)-environment-variable: (require 'shell)
-;;     icicle-shell-dynamic-complete-as-command: Added candidate help for shell commands.
-;; 2009/01/04 dadams
-;;     Added ESS support:
-;;       Added: icicle-comint-replace-by-expanded-filename, icicle-ess-complete-filename,
-;;              icicle-ess(-internal)-complete-object-name, icicle-ess-R-complete-object-name.
-;;       Thx to Sebastian Luque.
-;;     Improved some doc strings.
-;; 2009/01/02 dadams
-;;     icicle-comint-dynamic-complete-as-filename, icicle-comint-dynamic-simple-complete:
-;;       Fixed for comint-completion-autolist, absolute directories.  Thx to Sebastian Luque.
-;; 2009/01/01 dadams
-;;     icicle-comint-replace-orig-completion-fns:
-;;       Use icicle-comint-dynamic-complete-replacements instead of hard-coded list.
-;;     icicle-comint-dynamic-simple-complete: Fix for Emacs 20: map #'list over completions.
-;; 2008/12/30 dadams
-;;     Removed: shell-hook-fn.
-;;     Removed fset here for: old-comint-dynamic-*, old-shell-dynamic-*, old-bbdb-complete-name.
-;;     icicle-comint-dynamic-simple-complete: Map #'list over candidates (for Emacs 20).
-;;     icicle-comint-hook-fn:
-;;       Don't bind icicle-comint-command here - do it in icicle-bind-other-keymap-keys.
-;; 2008/12 27 dadams
-;;     Removed: icicle-find-file(-other-window)-w-wildcards.
-;;     Removed soft require of dired+.el.
-;;     icicle-find-file(-other-window):
-;;       Use just find-file* with wildcards arg, not *-w-wildcards, as action fn.
-;;       Bind icicle-default-value so that it won't insert the default value.
-;;     icicle-find-file(-other-window), icicle-choose-candidate-of-type:
-;;       Use nil as 3rd read-file-name arg, if not in Dired on a file name.
-;; 2008/12/23 dadams
-;;     icicle-comint-dynamic-complete-as-filename: Bind use-dialog-box to nil.
-;; 2008/12/22 dadams
-;;     icicle-comint-dynamic-complete-as-filename: Use INIT and PRED in read-file-name call.
-;; 2008/12/21 dadams
-;;     Added: icicle-shell-hook-fn, (icicle|old)-comint-dynamic-complete(-filename),
-;;            (icicle|old)-shell-dynamic-complete-(command|filename|environment-variable), 
-;;            icicle-comint-replace-orig-completion-fns, icicle-comint-dynamic-simple-complete,
-;;            icicle-comint-dynamic-complete-as-filename,
-;;            icicle-shell-dynamic-complete-as-(command|environment-variable).
-;;     Renamed: icicle-comint-send-input to icicle-comint-search-send-input,
-;;              icicle-comint-get-final-choice to icicle-comint-search-get-final-choice,
-;;              icicle-comint-get-minibuffer-input to icicle-comint-search-get-minibuffer-input.
-;;     Require shell.el at compile time.
-;;     Use fn, not var, confirm-nonexistent-file-or-buffer.  Thx to Daniel Clemente.
-;; 2008/12/02 dadams
-;;     Removed all use of icicle-file-ignore-space-prefix-flag (removed).
-;; 2008/11/23 dadams
-;;     Updated wrt Emacs 23:
-;;       find-file-confirm-nonexistent-file -> confirm-nonexistent-file-or-buffer.
-;;       icicle-buffer*, icicle-add-buffer-candidate, icicle-choose-candidate-of-type:
-;;         Added confirm-nonexistent-file-or-buffer.
-;; 2008/11/22 dadams
-;;     icicle-command-abbrev, icicle-remove-buffer-config-action, icicle-find-file-absolute*,
-;;       icicle-(recent|locate)-file*, icicle-describe-option-of-type,
-;;       icicle-(vardoc|fundoc|plist|doc), icicle-complete-keys-1, icicle-read-color:
-;;         Put icicle-fancy-candidates property on prompt when appropriate.
-;;     icicle-(find|recent|locate)-file(-absolute)(-other-window):
-;;       Support find-file-confirm-nonexistent-file (Emacs 23).
-;; 2008/11/17 dadams
-;;     Added: icicle-find-first-tag-action, icicle-find-first-tag-other-window-action.
-;;     icicle-find(-first)-tag(-other-window), icicle-find-tag-action: Crosshairs highlighting.
-;;     icicle-find-first-tag(-other-window): Use icicle-find-first-tag(-other-window)-action.
-;;     Mention crosshairs.el in doc strings of commands that use it.
-;; 2008/11/14 dadams
-;;     icicle-locate-file*: Use face icicle-candidate-part only for negative prefix arg.
-;; 2008/11/09 dadams
-;;     icicle-explore: When only 1 candidate, no completion.  Thx to Hannes Janetzek.
-;; 2008/11/04 dadams
-;;     Removed compile-time require of palette.el or eyedropper.el.  Thx to Andrey Zhdanov.
-;;     icicle-read-color: Moved soft require of palette.el or eyedropper.el to beginning.
-;;     Removed: icicle-generic-S-tab.
-;;     icicle-add-key+cmd: Removed test for icicle-generic-S-tab.
-;; 2008/11/03 dadams
-;;     icicle-insert-for-yank: push-mark first.  Thx to Fabrice Knevez.
-;;     Renamed: icicle-insert-kill to icicle-completing-yank,
-;;              icicle-yank-insert to icicle-yank-maybe-completing.
-;;     icicle-search: Restored binding of icicle-searching-p (somehow, accidentally removed it).
-;; 2008/11/02 dadams
-;;     icicle-(doc|vardoc|fundoc|plist):
-;;       Prefix arg uses candidates cache.  Tighten scope of condition-case.
-;;     icicle-doc:
-;;       Show all of fn, var, and face doc that are available.  Thx to Fabrice Knevez.
-;;       Use multi-completion: added symbol name and type.
-;;     icicle-doc-action: (intern (icicle-transform-multi-completion...)), not assoc.
-;; 2008/10/27 dadams
-;;     icicle-find(-first)-tag*: Bind case-fold-search too.
-;; 2008/10/26 dadams
-;;     icicle-(file|directory)-list, icicle-find-file(-absolute)(-other-window),
-;;       icicle-(locate|recent)-file(-other-window): Bind to icicle-file-* options.
-;;     icicle-locate-file*, icicle-recent-file*:
-;;       Bind icicle-abs-file-candidates, icicle-delete-candidate-object.
-;;       Move init code into bindings.
-;;     icicle-find-first-tag*: Move init code into bindings.
-;; 2008/10/24 dadams
-;;     Find-tag fixes.  Thx to Per Nordlow.
-;;       icicle-find-tag: Bind completion-ignore-case also for call to icicle-explore.
-;;       icicle-find-tag-define-candidates-1:
-;;         Look for regexp followed by DEL, through eol.  Move to bol, then next line.
-;;     icicle-explore: Call icicle-get-alist-candidate with NO-ERROR-P arg.
-;; 2008/10/23 dadams
-;;     icicle-find-tag: Use nil for REQUIRE-MATCH in call to icicle-explore.
-;; 2008/10/21 dadams
-;;     icicle-search-read-context-regexp: Bound icicle-candidate-(action|help)-fn to nil.
-;;     icicle-search-define-candidates-1: Added error message - better than generic explore msg.
-;;     Moved enable-recursive-minibuffers from *-search-region to *-search-region-action.
-;;     icicle-search-region-action: Added message if no such file.
-;; 2008/10/18 dadams
-;;     Replaced customize-save-variable by funcall icicle-customize-save-variable-function.
-;;     icicle-bookmark(-other-window): Use icicle-bookmark-cleanup.  Removed completion default.
-;;     Added: icicle-bookmark-cleanup: Select orig-window at end.  Thx to Andrey Zhdanov.
-;; 2008/10/17 dadams
-;;     Added: icicle-bookmark-cmd.
-;; 2008/10/16 dadams
-;;     icicle-bookmark-jump-1: Fixed for Emacs 23.  Thx to Andrey Zhdanov.
-;; 2008/10/12 dadams
-;;     Added: icicle-search-ibuffer-marked, icicle-search-buff-menu-marked.
-;;     icicle-search-dired-marked: Removed unused let binding.
-;; 2008/10/11 dadams
-;;     icicle-Info-index-20: Use symbol at point as default index topic.
-;; 2008/10/05 dadams
-;;     icicle-Info-read-node-name: Use lax completion.  Thx to Richard Kim.
-;; 2008/09/22 dadams
-;;     icicle-dired-project(-other-window):
-;;       Map expand-file-name over absolute file names, to expand ~ in fileset entries.
-;; 2008/09/20 dadams
-;;     icicle-find-file-absolute(-other-window): abs-file-list -> icicle-abs-file-list.
-;; 2008/09/19 dadams
-;;     icicle-add-entry-to-saved-completion-set:
-;;       Use only the fileset name, not the whole fileset, in the (:fileset...) entry.
-;;     icicle-remove-entry-from-saved-completion-set: Rewrote.
-;;       Either the entry to remove or the set to remove it from can now be a fileset.
-;;     icicle-dired-save-marked-persistently: Added FILESETP arg, so you can save in a fileset.
-;;     icicle-dired-project(-other-window): Include filesets as project candidates.
-;;     Renamed: icicle-dired-save-marked-to-cache-file to icicle-dired-save-marked-persistently.
-;;     Moved icicle-kill-a-buffer to icicles-fn.el.
-;; 2008/09/15 dadams
-;;     icicle-(add|remove)-candidate-(to|from)-saved-completion-set: Use :fileset keyword.
-;;     icicle-search-where-arg, icicle-search-where-arg:
-;;       Wrap icicle-(file|buffer)-list with save-selected-window.
-;; 2008/09/14 dadams
-;;     Renamed: icicle-(add|remove)-candidate-(to|from)-saved-completion-set to
-;;              icicle-(add|remove)-entry-(to|from)-saved-completion-set.
-;;     icicle-add-entry-to-saved-completion-set: Treat fileset entries, not just strings.
-;;     icicle-(add|remove)-entry-(to|from)-saved-completion-set,
-;;       icicle-remove-saved-completion-set, icicle-dired-project(-other-window):
-;;         No default value for completing-read.
-;; 2008/09/13 dadams
-;;     Use renamings from icicles-mcmd.el:
-;;       icicle-candidate-set-save-to-cache-file to icicle-candidate-set-save-persistently,
-;;       icicle-candidate-set-retrieve-from-cache-file to *-candidate-set-retrieve-persistent.
-;; 2008/09/11 dadams
-;;     Added: icicle-grep-saved-file-candidates.
-;; 2008/09/09 dadams
-;;     Added: icicle-remove-saved-set-action: No longer set minibuffer-completion-table or call
-;;                                            icicle-complete-again-update.
-;;            icicle-dired-save-marked-(to-(variable|cache-file)|as-project),
-;;            icicle-dired-project(-other-window).
-;;     Renamed: icicle-candidate-set-dired-marked-save(-more) to icicle-dired-save-marked(-more)
-;;     icicle-remove-saved-completion-set:
-;;       Prompt and delete cache file.  Use icicle-remove-saved-set-action as action function.
-;;       Bind: icicle-whole-candidate-as-text-prop-p, icicle-use-candidates-only-once-flag.
-;;       Remove *Completions* window at end.
-;; 2008/09/08 dadams
-;;     icicle-dired-saved-file-candidates(-other-window):
-;;       Don't change to relative file names - use whichever form (abs, rel) is saved.
-;;     icicle-find-tag-define-candidates-1: Make sure tag is not empty before (aref tag 0).
-;;     icicle-find-file-absolute(-other-window):
-;;       Use default-directory as init value and default value.
-;; 2008/09/03 dadams
-;;     icicle-bookmark(-other-window), icicle-goto-marker-1:
-;;       Use crosshairs-unhighlight, not icicle-unhighlight-crosshairs+cleanup.
-;;     icicle-goto-marker-1: Bind orig-buff.
-;;     *-bookmark-jump-1, *-goto-marker-1-action, *-compilation-search-in-context-fn:
-;;       Use crosshairs-highlight, not icicle-highlight-crosshairs.
-;; 2008/09/02 dadams
-;;     Added: icicle-dabbrev--abbrev-at-point.
-;;     icicle-dabbrev-completion: Use icicle-dabbrev--abbrev-at-point.  Thx to Tomer Levin.
-;; 2008/09/01 dadams
-;;     Added: icicle-bookmark-jump(-other-window), icicle-bookmark-jump-1.
-;;     Removed: icicle-bookmark-other-window-action.
-;;     icicle-bookmark(-other-window): Use icicle-bookmark-jump(-other-window) as action fn.
-;;                                     Clean up crosshairs highlighting at end.
-;;     icicle-goto-marker-1:
-;;       Don't bind minibuffer-exit-hook.  Don't require crosshairs.el or hl-line+.el.
-;;       Use icicle-unhighlight-crosshairs+cleanup for the cleanup.
-;;     icicle-compilation-search: Don't require hl-line+.el.
-;;     icicle-compilation-search-in-context-fn: Use icicle-highlight-crosshairs.
-;; 2008/08/31 dadams
-;;     icicle-goto-marker-1-action:
-;;       Use col-highlight-(un)highlight, not crosshairs-flash.  Force redisplay.
-;;       Add col-highlight-unhighlight to pre-command-hook.
-;;       Use hl-line-highlight-now, not hl-line-flash.
-;;     icicle-goto-marker-1: Remove col-highlight-unhighlight from pre-command-hook at end.
-;;     icicle-customize-face(-other-window, icicle-execute-extended-command-1,
-;;       icicle-find-tag-action, icicle-insert-thesaurus-entry, icicle-apply(-list)-action,
-;;       icicle-search-action, icicle-tags-search, icicle-choose-anything-candidate:
-;;         Select window before call select-frame-set-input-focus.
-;; 2008/08/25 dadams
-;;     icicle-find-file-absolute(-other-window), icicle-(recent|locate)-file(-other-window):
-;;       Use lax completion and provide WILDCARDS arg to find-file.
-;; 2008/08/24 dadams
-;;     Use renaming from icicles-fn.el: icicle-minibuffer-contents to icicle-minibuf-input.
-;; 2008/08/23 dadams
-;;     icicle-clear-history: Wrap default value, minibuffer-history-variable, with symbol-name.
-;; 2008/08/21 dadams
-;;     Added: icicle-file(-other-*), icicle-find-file-absolute(-other-*).  Thx to Glauber M4.
-;;     Soft-require bbdb-com.el at compile time.  Don't require bbdb.el at load time - define
-;;       old-bbdb-* only if original is already defined.
-;;     icicle-bbdb-complete-name: Raise error if BBDB not loaded.
-;; 2008/08/20 dadams
-;;     icicle-bbdb-complete-name, icicle-clear-current-history: Replaced ding by icicle-ding.
-;; 2008/08/18 dadams
-;;     icicle-clear-history:
-;;       Moved icicle-use-candidates-only-once-flag binding to icicle-clear-history-1.
-;;     icicle-delete-windows: Bind icicle-inhibit-try-switch-buffer.
-;;     icicle-insert-kill: Bind icicle-sort-function to nil.
-;;     icicle-recent-file(-other-window):
-;;       Bind *-candidate-properties-alist and *-list-use-nth-parts to nil if no prefix arg.
-;;     icicle-goto(-global)-marker:
-;;       Bind icicle-sort-function(s-alist) differently in each - don't bind in *-goto-marker-1.
-;;     icicle-remove-region: Use just icicle-delete-region-from-alist as action function.
-;;     icicle-delete-region-from-alist:
-;;       Use the propertized region name, not just reg-name in the cons to delete.
-;;     Moved icicle-cdr-less-p to icicles-fn.el and renamed to icicle-cdr-lessp.
-;;     Moved icicle-remove-candidate-display-others to icicles-mcmd.el.
-;;     Use renamings from icicles-fn.el: icicle-complete-again-update, icicle-remove-if-not.
-;;     icicle-explore, icicle-find-tag, icicle-complete-keys:
-;;       Renamed local orig-* vars.  Use explore's in *-search-(quit-or-error|cleanup|action).
-;; 2008/08/14 dadams
-;;     icicle-apply: Handle multi-completion alist entries.
-;;     icicle-goto-global-marker: Treat icicle-add-buffer-name-flag: Use multi-completions.
-;;     icicle-marker+text: Added optional arg.  Annotate text with buffer name if appropriate.
-;;     icicle-goto-marker-1: Pass global-ring-p to icicle-marker+text, so it can annotate.
-;; 2008/08/13 dadams
-;;     icicle-goto-marker-1: Don't add marker to ring markers if global ring.
-;;     icicle-goto-marker-1-action: select-frame-set-input-focus.
-;;     icicle-bbdb-complete-name: let -> let* (duh!) for completing-read.
-;; 2008/08/12 dadams
-;;     Added: icicle-goto(-global)-marker-or-(set-mark-command|pop-global-mark),
-;;            icicle-goto-marker-1-action (factored out from icicle-goto-marker-1).
-;;     icicle-goto-marker-1:
-;;       Add mark-marker to list of markers in ring.
-;;       Use icicle-goto-marker-1-action.
-;;       Go directly to marker if only one.  Message if same as point.
-;;       Better test for type of ring, for error msg.
-;;     icicle-apply: Use icicle-explore-final-choice-full in final result (not void var).
-;;                   Added optional arg NOMSG; bind icicle-apply-nomsg.
-;;     icicle-apply-action: Respect icicle-apply-nomsg.  Removed vestigial cruft.
-;;     icicle-bbdb-complete-name: Bind icicle-bbdb-complete-name to t and use strict completion.
-;; 2008/08/11 dadams
-;;     icicle-search-highlight-context-levels: Increase overlay priority for each context level.
-;;     icicle-search-highlight-all-input-matches, icicle-search-highlight-input-matches-here:
-;;       Made of current-input overlay higher than any context-level overlay: 204 -> 220.
-;; 2008/08/10 dadams
-;;     Added: icicle-explore, icicle-find-tag-define-candidates (renamed old to *-1),
-;;            icicle-search-define-candidates (renamed old to *-1), icicle-search-cleanup,
-;;            icicle-(find-tag|search)-(final-act|quit-or-error).
-;;     Renamed: icicle-find-tag-define-candidates to icicle-find-tag-define-candidates-1,
-;;              icicle-search-define-candidates to icicle-search-define-candidates-1.
-;;     Redefined to use icicle-explore: icicle-find-tag, icicle-apply, icicle-search.
-;;     icicle-comint-get-final-choice: Use icicle-explore-final-choice (not icicle-search-*).
-;; 2008/08/08 dadams
-;;     Added: icicle-goto-marker-1 (from icicle-goto-marker):
-;;       Use unwind-protect and minibuffer-exit-hook to unhighlight crosshairs.
-;;       Provide S-delete: bind icicle-delete-candidate-object.
-;;       Require crosshairs.el, hl-line+.el.  Use crosshairs-flash.
-;;     icicle-goto(-global)-marker: Use icicle-goto-marker-1.
-;; 2008/08/06 dadams
-;;     icicle-kmacro(-action):
-;;       Better prefix arg treatment.
-;;       kmacro-end-or-call-macro if still defining.
-;;       No-exit require-match.
-;;       Default value if only one.
-;;       Minor bug fix (extra candidate).
-;;       Name macros just 1, 2..., not macro #1, macro #2...
-;; 2008/08/03 dadams
-;;     Added: icicle-clear(-current)-history(-1|-entry), icicle-apply-list-action.
-;;     icicle-apply: Bind icicle-all-candidates-list-action-fn to icicle-apply-list-action.
-;;     Renamed: icicle-all-candidates-action-fn to icicle-all-candidates-list-action-fn,
-;;              icicle-candidate-alternative-action-fn to icicle-candidate-alt-action-fn.
-;; 2008/07/27 dadams
-;;     icicle-recent-file*, icicle-locate-file*: Added date multi-completion, with prefix arg.
-;;     Added: icicle-make-file+date-candidate.
-;; 2008/07/23 dadams
-;;     Renamed: icicle-map(-action) to icicle-apply(-action).  Added defalias for icicle-map.
-;; 2008/07/21 dadams
-;;     Added: icicle-bbdb-complete-name.  Thx to Ian Swainson.  require of bbdb.el for compile.
-;; 2008/07/19 dadams
-;;     icicle-Info-menu: Corrected regexp to pick up menu-item default, for Emacs 20.
-;; 2008/07/15 dadams
-;;     eval-when-compile require of: anything, cookie1, etags, eyedropper/palette, yow.
-;;     icicle-customize-apropos-options-of-type: Typo: help-remove-duplicates -> icicle-*.
-;;     icicle-send-bug-report: Include emacs-version.
-;; 2008/05/16 dadams
-;;     icicle-find-first-tag*, icicle-find-tag: Use tags-lazy-completion-table for Emacs 23.
-;; 2008/04/25 dadams
-;;     icicle-execute-extended-command-1:
-;;       Add msg about binding if suggest-key-bindings.  Thx to Jonathan Arkell.
-;; 2008/04/14 dadams
-;;     icicle-pp-eval-expression: Treat negative prefix arg.
-;; 2008/04/13 dadams
-;;     icicle-pp-eval-expression:
-;;       Treat prefix arg (added optional arg).
-;;       Respect eval-expression-debug-on-error and icicle-pp-eval-*.
-;; 2008/04/09 dadams
-;;     icicle-apropos-(function|command), icicle-imenu-non-interactive-function-p,
-;;       icicle-complete-keys-help: Use fboundp, not functionp, to also pick up macros.
-;; 2008/04/04 dadams
-;;     icicle-bookmark: Bind completion-ignore-case to bookmark-completion-ignore-case.
-;;     Added: icicle-bookmark-other-window(-action).
-;; 2008/04/01 dadams
-;;     icicle-describe-option-of-type: Bind icicle-apropos-complete-match-fn to nil.
-;;     icicle-describe-opt-of-type-complete:
-;;       Moved icicle-current-completion-mode test out of icicle-delete-if-not (iterates).
-;; 2008/03/31 dadams
-;;     icicle-locate-file(-other-window), icicle-plist, icicle-describe-option-of-type,
-;;       icicle-(var|fun)doc: icicle-highlight-lighter, before gather candidates.
-;;     icicle-plist, icicle-describe-option-of-type, icicle-vardoc, icicle-fundoc:
-;;       Simplified doc string and prompt wrt C-M-j.
-;; 2008/03/30 dadams
-;;     icicle-Info-menu: Treat also pseudo-menu at Top.  Thx to William Xu.
-;; 2008/03/26 dadams
-;;     Added: icicle-Info-menu(-cmd).
-;; 2008/03/22 dadams
-;;     icicle-other-window-or-frame: Rewrote to use icicle-select-window for all frames or one.
-;;     icicle-select-window:
-;;       Rewrote: Similar to icicle-select-frame (unique window names).  All frames or one.
-;;     Added: icicle-select-window-by-name, icicle-make-window-alist.
-;; 2008/03/19 dadams
-;;     Added: icicle-pp-eval-expression (old version in icicles-mcmd.el was renamed).
-;; 2008/03/11 dadams
-;;     icicle-repeat-complex-command: Rewrote doc string.
-;; 2008/03/10 dadams
-;;     icicle-select-frame: Rewrote to use icicle-select-frame-by-name (unique frame names).
-;;     icicle-choose-candidate-of-type: Use icicle-make-frame-alist, not make-frame-alist.
-;;     Added: icicle-select-frame-by-name, icicle-make-frame-alist.
-;; 2008/03/09 dadams
-;;     icicle-dabbrev-completion, icicle-find-tag-define-candidates,
-;;       icicle-Info-build-node-completions, icicle-search, icicle-read-color:
-;;         Call icicle-highlight-lighter.
-;; 2008/03/05 dadams
-;;     icicle-map: Don't inhibit sorting.
-;;     icicle-goto(-global)-marker: Provide sorting choices.  Highlight target line.
-;;     Added: icicle-cdr-less-p.
-;; 2008/02/26 dadams
-;;     Added: icicle-where-is.
-;; 2008/02/23 dadams
+;; 2009/09/21 dadams
 ;;     icicle-lisp-complete-symbol:
-;;       Wrap completing-read in save-excursion, because of icicle-top-level-*-completion-flag.
-;;     icicle-search: Use NOWARN arg with find-file-noselect.
-;;     Added: icicle-tags-search.
-;;     Renamed: icicle-search-tag* to icicle-find-tag*,
-;;              icicle-find-tag(-other-window) to icicle-find-first-tag(-other-window).
-;; 2008/02/21 dadams
-;;     icicle-Info-goto-node: Added .. node for book order.
-;;       Use global var icicle-Info-only-rest-of-book-p.  Call icicle-Info-goto-node-1.
-;;     icicle-Info-read-node-name: Remove REST-P arg.
-;;     icicle-Info-goto-node-action: When rest-of-book-p:
-;;       Update node completion table and then completions, and set current candidate number. 
-;;     Added: icicle-Info-goto-node-1, icicle-Info-build-node-completions(-fix-*).
-;; 2008/02/17 dadams
-;;     icicle-Info-goto-node:
-;;       Moved let to interactive spec, and added two args.  Use icicle-Info-read-node-name.
-;;       Negative prefix arg means completions are limited to rest of book.
-;;       Add icicle-Info-book-order-p to icicle-sort-functions-alist.
-;;       New doc string, to explain everything.
-;;     Added: icicle-Info-book-order-p, icicle-Info-read-node-name.
-;; 2008/02/16 dadams
-;;     icicle-(select|remove|search)-region:
-;;       Removed extraneous (setq icicle-candidates-alist) in let binding.
-;; 2008/02/13 dadams
-;;     Added: icicle-search-tag, icicle-search-tag-define-candidates, icicle-search-tag-action,
-;;       icicle-search-tag-help, icicle-pop-tag-mark.
-;;     Updated doc string of icicle-find-tag(-other-window).
-;; 2008/02/08 dadams
-;;     icicle-compilation-search-in-context-fn:
-;;       Simplified and corrected.  Dropped let, with-current-buffer.  Narrow to whole line.
-;;       Different code for Emacs 22+: Set current error; call compilation-next-error-function.
-;;     Removed: icicle-compilation-search-hl-line.
-;;     icicle-compilation-search: Soft require hl-line+.
-;;                                Don't bind next-error-hook to icicle-*-search-hl-line.
-;;     Renamed: icicle-directories-list to icicle-directory-list.
-;; 2008/02/07 dadams
-;;     icicle-search-action:
-;;       Moved icicle-highlight-candidate-* to after icicle-search-in-context-fn call.
-;;     icicle-compilation-search-in-context-fn:
-;;       Use buffer of marker.  Removed code using overlay buffer.
-;;     icicle-compilation-search: Bound icicle-compilation-search-hl-line as next-error-hook.
-;;     Added: icicle-compilation-search-hl-line.
-;; 2008/02/03 dadams
-;;     icicle-file-list: Rewrote using icicle-define-file-command.
-;;     icicle-(re)set-option-*: Added boundp before user-variable-p and icicle-binary-option-p.
-;;     Added: icicle-directories-list.
-;; 2008/01/18 dadams
-;;     Moved icicle-complete-keys-alist to icicles-var.el
-;; 2008/01/13 dadams
-;;     icicle-customize-face(-other-window), icicle-face-list, icicle-read-color:
-;;       Use icicle-transform-multi-completion.
-;;     icicle-(vardoc|fundoc): Use icicle-funvardoc-action as action fn and as help fn.
-;;     icicle-doc: Use icicle-doc-action as action fn and as help fn.
-;;     Added: icicle-funvardoc-action, icicle-doc-action.
-;;     icicle-search-replace-search-hit: Simplified bind/restore of Icicles completion vars.
-;; 2008/01/11 dadams
+;;       Complete symbol in buffer as far as possible first.  Show completions initially.
+;; 2009/09/17 dadams
+;;     icicle-delete-file, icicle-(file|directory)-list,
+;;       icicle-find-file(-absolute)(-other-window),
+;;       icicle-(recent|locate)-file(-other-window),
+;;       icicle-find-file-in-tags-table(-other-window): Use icicle-file-bindings (new macro).
+;; 2009/09/16 dadams
+;;     Added: icicle-insert-buffer.
+;;     icicle-kill-buffer, icicle-buffer(-other-window), icicle-add-buffer-candidate:
+;;       Use icicle-buffer-bindings (new macro).
+;; 2009/08/29 dadams
+;;     Added: icicle-define-bookmark-other-window-command, icicle-select-bookmarked-region,
+;;            icicle-bookmark(-region|-info|-gnus|-w3m|(-non|-local|-remote)-file)-other-window.
+;;     icicle-bookmark-propertize-candidate: Updated to reflect renamed bookmark+.el face names.
+;;     icicle-bookmark-file-narrow: Use bookmarkp-file-bookmark-p.
+;;     (lambda...) -> #'(lambda...).
+;; 2009/08/25 dadams
+;;     Added: icicle-bookmark-cleanup-on-quit.
+;;     icicle-bookmark(-other-window): Use icicle-bookmark-cleanup-on-quit.
+;;     icicle-bookmark-cleanup: Removed code to return to original window a focus minibuffer.
+;; 2009/08/24 dadams
+;;     Added: icicle-bookmark-propertize-candidate.
+;;     icicle-bookmark(-other-window): Put faces on bookmark candidates according to type.
+;; 2009/08/23 dadams
+;;     Added: icicle-bookmark-(region|info|gnus|w3m|(non-|local-|remote-)file)-narrow.
+;;     icicle-bookmark(-other-window): Bind keys to bookmark candidate narrowing commands.
+;;     icicle-bookmark-cleanup: Unbind the same commands.
+;;     icicle-bookmark-cmd:
+;;       Let bookmark+.el (latest version) handle prompting for name, even for region bookmark.
+;;       Remove any newlines in bookmark name, when no prompting (thx to Thierry Volpiatto).
+;; 2009/08/21 dadams
+;;     icicle-bookmark-jump-1: Typo.
+;; 2009/08/20 dadams
+;;     icicle-bookmark-cmd: Use icicle-bookmark-other-window, not icicle-bookmark.
+;;                          Fix trimmed-name: no longer than def-name.
+;;     icicle-bookmark(-other-window): Bind enable-recursive-minibuffers, in case need to read.
+;;     icicle-bookmark-jump-1: No crosshair highlighting for region bookmarks.
+;; 2009/08/19 dadams
+;;     Added: icicle-bookmark-help-string.
+;;     icicle-bookmark-cmd: Handle creation of region bookmarks (new default values).
+;;                          icicle-bookmark-name-length-max now applies to whole bookmark name.
+;;     icicle-bookmark(-other-window):
+;;       Apply icicle-candidate-short-help to candidates.  Use also for the help function.
+;;     icicle-bookmark-jump-1: Use bookmark--jump-via if it is defined.
+;; 2009/06/21 dadams
+;;     icicle-bookmark-jump-1: Removed temporary Emacs 23 workaround for (fixed) bug #1175.
+;; 2009/06/07 dadams
+;;     icicle-get-alist-candidate -> funcall icicle-get-alist-candidate-function.
+;; 2009/05/22 dadams
+;;     Require icicles-mac.el if load-library doesn't find it.
+;;     Created - Split off from icicles-cmd.el.
+ 
+;;;(@* "CHANGE LOG FOR `icicles-cmd2.el'")
+;;
+;; 2009/09/05 dadams
+;;     icicle-search-replace-all-search-hits:
+;;       Bind to nil: icicle-minibuffer-message-ok-p, icicle-help-in-mode-line-flag.
+;;     icicle-search-action-1: Add condition-case to ignore disappearance of *Completions* win.
 ;;     icicle-search-highlight-and-maybe-replace:
-;;       Don't call icicle-update-completions or icicle-display-candidates-in-Completions here.
-;;     icicle-search-in-context-default-fn, icicle-compilation-search-in-context-fn:
-;;       Call icicle-update-completions (at the end), since not done in i*-and-maybe-replace.
-;; 2008/01/08 dadams
-;;     icicle-describe-opt-of-type-complete: Treat 3rd arg.  Treat prefix completion.
-;; 2008/01/06 dadams
-;;     icicle-read-color: Provide color help for C-M-.  Added: icicle-color-help.
-;; 2008/01/04 dadams
-;;     icicle-doc, icicle-fundoc, icicle-vardoc: Use history variable icicle-doc-history.
-;; 2008/01/02 dadams
-;;     Added: icicle-search-dired-marked.
-;; 2008/01/01 dadams
-;;     icicle-(buffer|face|file)-list: Reverse list, so C-! keeps order.
-;;     icicle-dired-saved-file-candidates(-other-window):
-;;       Convert candidates to relative file names before opening Dired using them.
-;;       Error if any candidate is not a file in directory.
-;;     Added: icicle-candidate-set-dired-marked-save(-more).
-;; 2007/12/31 dadams
-;;     Added: icicle-fn-doc-minus-sig.
-;;     icicle-fundoc, icicle-doc: Use icicle-fn-doc-minus-sig.
-;;     icicle-doc: Bind icicle-transform-function, not icicle-whole-candidate-as-text-prop-p.
-;; 2007/12/27 dadams
-;;     icicle-describe-option-of-type:
-;;       Bind icicle-apropos-complete-match-fn to nil to prevent automatic input match.
-;; 2007/12/26 dadams
-;;     icicle-describe-opt-of-type-complete: Pretty-print types.  Bind icicle-candidate-help-fn.
-;;     Added: icicle-describe-opt-action.
-;; 2007/12/24 dadams
-;;     icicle-describe-option-of-type:
-;;       Rewrote for different kinds of type matching.  TYPE can be a regexp or type sexp.
-;;         Diff prefix args for diff behaviors. Handle type inheritance and value-checking.
-;;     Added: icicle-describe-opt-of-type-complete.
-;; 2007/12/21 dadams
-;;     icicle-customize-apropos-options-of-type: help-var-is-* -> icicle-var-is-*.
-;; 2007/12/20 dadams
-;;     icicle-dired-saved-file-candidates(-*):
-;;       Use substitute-command-keys in error msg.  Use generate-new-buffer name, not y-or-n-p.
-;; 2007/12/15 dadams
-;;     Added: icicle-customize-apropos-options-of-type.
-;; 2007/12/11 dadams
-;;     icicle-read-color: Don't leave out variable proxies if don't have eyedropper.
-;; 2007/12/07 dadams
-;;     Added: icicle-describe-option-of-type.
-;;     icicle-doc:
-;;       Choose kind of doc, instead of showing all (overwriting).
-;;       Removed binding of icicle-candidate-properties-alist.
-;;     icicle-read-color: Single-quote proxies, don't wrap with `_'.
-;; 2007/12/06 dadams
-;;     icicle-doc: Forgot to include face doc.
-;; 2007/12/03 dadams
-;;     Renamed icicle-longest-common-match to icicle-expanded-common-match.
-;; 2007/12/02 dadams
-;;     icicle-read-color: Include color-valued variables as proxy candidates.
-;; 2007/11/30 dadams
-;;     icicle-command-abbrev:
-;;       Use only membership in icicle-proxy-candidates, not icicle-proxy-candidate property.
-;;       So predicate is just commandp, since proxies are not part of regular candidates.
-;;     icicle-command-abbrev-action:
-;;       Bind to save/restore: icicle-add-proxy-candidates-flag, icicle-proxy-candidates.
-;;     icicle-command-abbrev-command: Bind icicle-add-proxy-candidates-flag to nil, to reset.
-;; 2007/11/29 dadams
-;;     icicle-command-abbrev: Treat icicle-add-proxy-candidates-flag, icicle-proxy-candidates.
-;;     icicle-read-color: Don't test icicle-add-proxy-candidates-flag.
-;; 2007/11/27 dadams
-;;     icicle-command-abbrev: Remove icicle-proxy-candidate property in unwind-protect.
-;; 2007/11/26 dadams
-;;     icicle-get-anything-candidates: Fixed for try-completion and test-completion cases.
-;;     icicle-choose-anything-candidate: Bind icicle-candidates-alist to actions (two places).
-;; 2007/11/25 dadams
-;;     Added: icicle-command-abbrev(-action|-command|-matching-commands|-record|regexp).
-;; 2007/11/24 dadams
-;;     icicle-execute-extended-command: Bind use-file-dialog to nil.
-;; 2007/11/17 dadams
-;;     icicle-read-color:
-;;       Respect icicle-add-proxy-candidates-flag.  Convert proxy multi-completions to strings.
-;; 2007/11/03 dadams
-;;     icicle-generic-S-tab: Doc string - mention icicle-generic-S-tab-keys.
-;; 2007/10/28 dadams
-;;     icicle-search: Don't bind icicle-expand-input-to-common-match-flag.  Updated doc string.
-;;     icicle-search-highlight-all-input-matches:
-;;       Don't set icicle-search-lcm unless icicle-expand-input-to-common-match-flag.
-;;     icicle-search-highlight-and-maybe-replace:
-;;       Match the lcm if icicle-search-replace-common-match-flag is non-nil.
-;;       Save icicle-candidate-nb around icicle-update-completions.
-;;       Set icicle-candidate-nb to 0 if nil.
-;;     icicle-search-highlight-input-matches-here:
-;;       Don't delete icicle-search-refined-overlays if icicle-*-all-current-flag.
-;; 2007/10/26 dadams
-;;     icicle-search-highlight-all-input-matches: Loop through overlays twice, to get the lcm.
-;;     icicle-search-highlight-input-matches-here: Highlight the lcm, if available.
-;;     icicle-search: Bind icicle-search-lcm.
-;; 2007/10/22 dadams
-;;    icicle-read-color: Use special-candidate face for pseudo color candidates.
-;;    icicle-add-key+cmd: Don't include keys bound to undefined.
-;; 2007/10/20 dadams
-;;    icicle-read-color, icicle-remove-color-duplicates:
-;;      Treat pseudo colors too (e.g. *point foreground*).
-;;    icicle-make-color-candidate: Added optional HEX-RGB arg.
-;; 2007/10/16 dadams
-;;     icicle-vardoc: Prefix arg means use only user options.
-;; 2007/10/14 dadams
-;;     Updated doc strings to reflect new icicle-act-before-cycle-flag change.
-;; 2007/10/13 dadams
-;;     icicle-get-anything-candidates:
-;;       If candidates is a fn, return fn that's useful for all-completions.  Filter by input.
-;;     icicle-choose-anything-candidate:
-;;       Don't sort or transform cands.  Respect Anything's require-pattern and delayed
-;;       settings.  Bind icicle-candidates-alist to candidates, if that's a function.
-;;     icicle-get-anything-candidates-of-type: Don't use mapcar if candidates is a function.
-;;     Added: icicle-get-anything-req-pat-chars, icicle-get-anything-input-delay.
-;; 2007/10/06 dadams
-;;     icicle-choose-candidate-of-type: Added entry for file type.
-;; 2007/09/25 dadams
-;;     icicle-doc: Bind icicle-whole-candidate-as-text-prop-p to treat full candidates.
-;; 2007/09/04 dadams
-;;     icicle-read-color: Added optional PROMPT arg.
-;; 2007/08/31 dadams
-;;     icicle-buffer-list: Prefix arg means only buffers visiting files are candidates.
-;;     icicle-search-where-arg, icicle-occur:
-;;       Prefix arg 99 means only buffers visiting files are candidates.
-;;     Added: icicle-search-choose-buffers.
-;; 2007/08/27 dadams
-;;     icicle-search-action: Fixed for return value.  Display the error message.
-;; 2007/08/25 dadams
-;;     icicle-choose-candidate-of-type: Removed (> emacs-major-version 21) restriction.
-;; 2007/08/25 dadams
-;;     Added: a, any, buffer, file, icicle-get-anything-(types|(default-)actions-for-type|
-;;            candidates-of-type|(cached-)candidates), icicle-anything(-candidate-value),
-;;            what-which-how, icicle-choose-anything-candidate.
-;;     Renamed icicle-clear-option to clear-option.
-;;     icicle-object-action: Treat Anything stuff.
-;;       Added optional type arg.  Use vars icicle-object-(named|predicate)-types.
-;;       Move icicle-read-var-value-satisfying call here from icicle-choose-candidate-of-type.
-;;     icicle-choose-candidate-of-type: Create buffer if needed.
-;;     Protected alias definitions with icicle-define-alias-commands-flag.
-;;     icicle-map(-action):
-;;       Use icicle-whole-candidate-as-text-prop-p and new icicle-get-alist-candidate.
-;;     icicle-(select|remove|search)-region, icicle-search:
-;;       Bind/use icicle-whole-candidate-as-text-prop-p.
-;;     icicle-occur: Require buffer names to match existing buffers.  Thx to Hadron Quark.
-;; 2007/08/15 dadams
-;;     Added command toggle as alias for icicle-toggle-option.
-;; 2007/08/09 dadams
-;;     Soft require kmacro.  Define icicle-kmacro* if kmacro gets loaded.
-;; 2007/07/27 dadams
-;;     icicle-search: Renamed icicle-act-first-then-navigate-p to icicle-act-before-cycle-flag.
-;; 2007/07/22 dadams
-;;     icicle-customize-face: Added prefix arg to give vanilla completion.
-;;     Added: icicle-customize-face-other-window.
-;;     Replace standard customize-face(-other-window) by icicle-customize-face(-other-window).
-;;     No longer require icicles-mode.el.
-;;     Require cus-edit.el (not just at compile time).
-;; 2007/07/08 dadams
-;;     Added: icicle-customize-faces.
-;;     icicle-customize-face: Bind icicle-all-candidates-action-fn to icicle-customize-faces.
-;; 2007/06/23 dadams
-;;     icicle-search-read-context-regexp, icicle-search-read-word, icicle-search-property-args,
-;;      icicle-add-region, icicle-save-string-to-variable:
-;;        Use icicle-completing-read-history, not read-from-minibuffer or read-string.
-;;     icicle-face-list: Bound icicle-list-nth-parts-join-string etc.
-;;     Moved to icicles-fn.el: icicle-read-from-minibuf-nil-default.
-;; 2007/06/22 dadams
-;;     Added: icicle-group-regexp, icicle-keyword-list, icicle-search-keywords.
-;; 2007/06/21 dadams
-;;     icicle-plist, icicle-(var|fun)doc, icicle-region-add-buffers, icicle-search-regexp-scan,
-;;      icicle-search-char-property-scan:
-;;        Use face icicle-candidate-part, not icicle-special-candidate.
-;;     icicle-add-key+cmd: Highlight key side of the pair (key  =  binding).
-;; 2007/06/18 dadams
-;;     Added: icicle-customize-face.
-;; 2007/06/17 dadams
-;;     icicle-make-color-candidate: Respect icicle-WYSIWYG-Completions-flag.
-;;     icicle-search-action: Added priority in call to icicle-place-overlay.
-;; 2007/06/12 dadams
-;;     icicle-execute-extended-command(-1):
-;;       i-e-e-c-1 prepares the new last command, but i-e-e-c sets it, at end, to this-command.
-;; 2007/06/10 dadams
-;;     Added: icicle-comint-hook-fn, icicle-compilation-hook-fn.
-;;     Removed unconditional add-hooks for comint-mode-hook and compilation(minor)-mode-hook.
-;; 2007/06/09 dadams
-;;     icicle-set-option-to-t, icicle-reset-option-to-nil, icicle-delete-windows,
-;;      icicle-add-buffer-candidate, icicle-remove-buffer-candidate, icicle-buffer-list,
-;;      icicle-remove-buffer-config, icicle-face-list, icicle-file-list,
-;;      icicle-remove-all-regions-in-buffer, icicle-delete-file:
-;;        Bind icicle-use-candidates-only-once-flag to t.
-;;     icicle-set-option-to-t, icicle-clear-option: Candidate vars must have value nil/non-nil.
-;;     icicle-search-regexp-scan: Added eobp test and empty hit-string test.
-;;     icicle-select-(frame|window), icicle-delete-windows:
-;;       Removed extra t arg to icicle-define-command.
-;; 2007/06/08 dadams
-;;     Added icicle-find-tag(-other-window).
-;; 2007/06/07 dadams
-;;     Renamed: icicle-font-history to icicle-font-name-history,
-;;              icicle-function-history to icicle-function-name-history,
-;;              icicle-variable-history to  icicle-variable-name-history.
-;;     Use standard history variable if bound, else use Icicles history variable:
-;;       bookmark-history, color-history, color-theme-history, face-name-history,
-;;       font-name-history, frame-name-history, function-name-history, variable-name-history
-;; 2007/06/05 dadams
-;;     Don't require hexrgb.el if no window system.
-;;     icicle-read-color: Use featurep, not require, for hexrgb.
-;;     icicle-make-color-candidate: Error if hexrgb is not loaded.
-;; 2007/05/31 dadams
-;;     icicle-execute-extended-command-1: Set, don't bind this-command.
-;;     icicle-execute-extended-command, icicle-execute-named-keyboard-macro:
-;;       Simpler save and restore of last-command.
-;; 2007/05/28 dadams
-;;     icicle-imenu: Use same prefix-arg behavior as icicle-search (search multiple...).
-;;     Added: icicle-imenu-(command|non-interactive-function(-p)).
-;;     icicle-search-highlight-context-levels:
-;;       Wrapped loop in condition-case.  Took max-levels determination out of loop.
-;; 2007/05/25 dadams
-;;     Added: icicle-face-list, icicle-next-single-char-property-change,
-;;            icicle-search-(where-arg|property-args|char-property(-scan)|overlay-property),
-;;            icicle-char-properties-in-buffer(s).
-;;     Removed: icicle-text-properties-in-buffer(s), icicle-search-text-property-scan.
-;;     icicle-search(-word): Use icicle-search-where-arg.
-;; 2007/05/21 dadams
-;;     Added: icicle-search-(buffer|file|all-regions).
-;;     icicle-imenu: Fixed treatment of prefix arg.
-;;     icicle-imenu-command-p: Fix to work also with Emacs 22 and  21.
-;; 2007/05/14 dadams
-;;     icicle-execute-extended-command-1: Error if empty command name.
-;; 2007/05/12 dadams
-;;     icicle-imenu: Added prefix arg for search for commands and non-cmds in Emacs-Lisp mode.
-;;     Added: icicle-imenu-command-p.
-;; 2007/05/11 dadams
-;;     icicle-search-define-candidates:
-;;       Move scan-fn-or-regexp to 4th arg from 2nd.  Removed &optional.
-;;       Apply icicle-search-regexp-scan to args also.
-;;     icicle-search-regexp-scan: Treat predicate.
-;;       Move regexp to 3rd arg from 2nd, and add predicate arg.  Removed &optional.
-;;     icicle-search-regexp-scan, icicle-search-text-property-scan:
-;;       Add lengths of temp-list and icicle-candidates-alist.
-;;     icicle-search-text-property(-scan): Added predicate argument.
-;;     icicle-search-region-action: Bind icicle-candidate-action-fn to icicle-search-action.
-;;     icicle-(select|search|remove)-region: Removed temp var bound to (icicle-region-sorted).
-;;     icicle-search: Mention predicate in no-match message.
-;; 2007/05/07 dadams
-;;     icicle-add-buffer-config: Added history args for icicle-read-from-minibuf-nil-default.
-;; 2007/05/06 dadams
-;;     icicle-search: Bind icicle-must-pass-predicate to icicle-search-context-match-predicate.
-;;     icicle-search-read-context-regexp: Don't accept an empty regexp.
-;;     Changed S-C- to C-S- and M-C- to C-M- in doc.
-;; 2007/05/04 dadams
-;;     icicle-(re)set-option-to-(nil|t), icicle-toggle-option: Enable recursive minibuffers.
-;; 2007/05/02 dadams
-;;     icicle-search-read-word: Updated doc string.
-;;     icicle-search: Respect icicle-search-whole-word-flag and icicle-regexp-quote-flag.
-;;                    Single message for non-existent buffers.
-;;     icicle-select-region-action: Message for non-existent file.
-;;     Added empty defvars for Emacs 22 standard vars, to quiet byte compiler.
-;; 2007/05/01 dadams
-;;     icicle-execute-extended-command-1:
-;;       Don't bind icicle-candidate-action-fn if we have already read command name.
-;;     icicle-search-*-scan: Fill, reverse temp list, then append to icicle-candidates-alist.
-;;     Added: icicle-search-word, icicle-search-read-word.
-;; 2007/04/29 dadams
-;;     icicle-search, icicle-search-text-property, icicle-text-properties-in-buffers:
-;;       Allow search of multiple files.  Change prefix arg accordingly.
-;; 2007/04/28 dadams
-;;     Added: icicle-compilation-search-in-context-fn, icicle-search-in-context-default-fn,
-;;            icicle-search-highlight-and-maybe-replace.
-;;     icicle-search-action: Move code to the new functions.  Use icicle-search-in-context-fn.
-;;     icicle-compilation-search: Rewrote.
-;;       No longer use compile-goto-error as icicle-search-hook.
-;;       Use icicle-compilation-search-in-context-fn.
-;;       Cannot-replace error msg if not Emacs 22, since no compilation-highlight-overlay.
-;;       Provide .* regexp and do not highlight - as in icicle-occur.
-;; 2007/04/22 dadams
-;;     icicle-search: Allow for pre-bound icicle-candidate(-alternative)-action-fn.
-;;     icicle-search-replace-search-hit:
-;;       Call icicle-candidate-action-fn, not necessarily icicle-search-action.
-;; 2007/04/20 dadams
-;;     Added: icicle-search-highlight-context-levels.  Use in icicle-search-action.
-;;     icicle-search-highlight-cleanup: Delete icicle-search-level-overlays.
-;;     icicle-search: Set icicle-search-context-regexp nil if scan-fn-or-regexp is not string.
-;;     icicle-search-replace-fixed-case-p: Return nil if arg is nil.
-;;     icicle-search-read-context-regexp: Use default with read-number; protect with fboundp.
-;;     Added soft require of strings.el.
-;; 2007/04/18 dadams
-;;     Added: icicle-search-replace-fixed-case-p.  Use in icicle-search-action.
-;;     icicle-search-action:
-;;       Set match data to region when icicle-search-replace-whole-candidate-flag is t.
-;;       Don't search for icicle-search-context-regexp.
-;;     icicle-search-replace-match: Added fixedcase arg.
-;;                                  Use icicle-search-replace-literally-flag.
-;;     Use replace-match-maybe-edit (Emacs 22), not replace-match, and save and restore stuff.
-;;     icicle-search-replace-search-hit:
-;;       Use regexp-history in read-string.  Use icicle-search-define-replacement.
-;; 2007/04/17 dadams
-;;     Added: icicle-search-replace-match.  Treat Emacs<22 also.  Use in icicle-search-action.
-;;     icicle-search-replace-search-hit: Use regexp-history in read-string.
-;; 2007/04/16 dadams
-;;     icicle-search-action: Use replace-count.
-;;     icicle-search: Initialize replace-count to 0.
-;; 2007/04/15 dadams
-;;     icicle-search-action: Allow \,... etc. replacement.
-;;       Use query-replace-compile-replacement and replace-match, with error treatment.
-;;       Removed unwind-protect.  Removed %s from error-msg return.
-;;     icicle-search: Save search string as icicle-search-context-regexp.
-;;                    Use "%s" for error message in failure error call.
-;;                    Updated doc string for lisp-eval replacement etc.
-;;     *(-all)-input-matches(-here): save-match-data around input matching.
-;;     icicle-search-highlight-input-matches-here: Added not eobp to loop test.
-;; 2007/04/13 dadams
-;;     icicle-search-highlight-input-matches-here: Bound free var ov.
-;; 2007/04/10 dadams
-;;     icicle-search-regexp-scan:
-;;       Use match indicated by icicle-search-context-level as context.
-;;     Added: icicle-search-read-context-regexp.
-;;     icicle-search(-region|-regexp-scan): Use icicle-search-read-context-regexp.
-;; 2007/04/08 dadams
-;;     icicle-map-action, icicle-search-action:
-;;       Return nil for success, error msg for failure (it was reversed).
-;;       Use icicle-highlight-candidate-in-Completions.
-;;     icicle-map-action: Moved minibuffer frame selection to unwind-protect final clause.
-;;     icicle-search: Give focus to original frame, in unwinding clause (C-g).
-;;     Added: icicle-search-highlight-input-matches-here.
-;;     icicle-search-highlight-all-input-matches: Highlight all input matches in candidate.
-;;     icicle-search-replace-search-hit:
-;;       Use 0 if icicle-candidate-nb is nil.  Display completions.
-;;       Save and restore: icicle-last-completion-command, icicle-last-input.
-;;       Prevent using same string as candidate for replacement.
-;;     icicle-search-action: Rewrote.  Enable repeated replacment of input matches.
-;;       Save and restore icicle-candidate-nb.  Wrap it around if at end.
-;;       Warn about empty input for whole-candidate replacement.
-;;       Update icicle-last-completion-candidate.  Display completions.
-;; 2007/04/07 dadams
-;;     icicle-search: Added query-replace functionality.
-;;       Navigate first, then act (C-next).
-;;       Give focus to last frame searched.
-;;       Bind: icicle-candidate-alternative-action-fn, icicle-inhibit-sort-p,
-;;             icicle-searching-p, icicle-expand-input-to-common-match-flag.
-;;       Bind icicle-buffer-require-match-flag to partial-match-ok in interactive spec.
-;;     icicle-search-action:
-;;       Added optional replace arg: if non-nil, then fn becomes a replace action.
-;;     Added: icicle-search-replace-search-hit, icicle-search-replace-candidate,
-;;     icicle-buffer-list: Bind all the stuff that is bound in icicle-buffer.
-;; 2007/04/06 dadams
-;;     icicle-execute-extended-command-1:
-;;       Bind this-command, but only around call to cmd - don't set it.
-;; 2007/04/02 dadams
-;;     Added: icicle-search-text-property, icicle-search-text-property-scan,
-;;            icicle-text-properties-in-buffer(s).
+;;       Apply renaming of icicle-acting-on-next/prev (no -p).
+;;       Use length of *-completion-candidates, not mct.
+;;       Fix assignment of new candidate nb, and for both directions.
+;;       Bind icicle-minibuffer-message-ok-p to inhibit no-candidates msg.
+;;       Wrap around to first only if not icicle-acting-on-next/prev.
+;; 2009/09/02 dadams
+;;     icicle-exchange-point-and-mark: Respect icicle-region-bookmarks-flag.
+;; 2009/08/29 dadams
+;;     Added: icicle-define-search-bookmark-command,
+;;            icicle-search(-region|-info|-gnus|-w3m|(-non|-local|-remote)-file)-bookmark,
+;;            icicle-search-bookmark-action.
+;;     Moved (and redefined) to icicles-cmd1.el: icicle-select-bookmarked-region.
+;;     (lambda...) -> #'(lambda...).
+;; 2009/08/25 dadams
+;;     Added icicle-select-bookmarked-region.
+;;     icicle-exchange-point-and-mark:
+;;       If bookmark+ is loaded, use region bookmarks.
+;;       Raise error if try to save inactive region or try to select with no saved regions.
+;; 2009/08/11 dadams
+;;     Added: icicle-search-replace-all-search-hits.
+;;     Renamed: icicle-search-replace-candidate to icicle-search-replace-cand-in-alist.
+;;     Added: icicle-search-replace-cand-in-mct (not used, for now).
 ;;     icicle-search:
-;;       Added &rest args.  Updated doc string.  Don't read regexp or reverse alist here.
-;;       Use icicle-search-define-candidates, not icicle-search-regexp-scan.
-;;     icicle-search-regexp-scan: Read regexp here.  Reverse alist here.
-;;     Moved to icicles-fn.el: icicle-filter-alist, icicle-first-matching-candidate.
-;;     Renamed: icicle-search-region-beg-end to icicle-region-or-buffer-limits.
-;; 2007/04/01 dadams
-;;     icicle-repeat-complex-command:
-;;       Remove duplicates and sort entries, but only for reading command to eval.
-;; 2007/03/31 dadams
-;;     icicle-lisp-complete-symbol: Bind icicle-top-level-when-sole-completion-flag to t.
-;; 2007/03/27 dadams
-;;     icicle-search: Hard-code C-next key in message.
-;;     icicle-search-regexp-scan: Initialize last-beg for first time.
-;; 2007/03/23 dadams
-;;     icicle-execute-extended-command-1:
-;;       Don't restore last-command.  Run (pre|post)-command-hook.  Set, don't bind,
-;;       this-command.  enable-recursive-minibuffers for interactive call of cmd.
-;;     icicle-execute-extended-command, icicle-execute-named-keyboard-macro:
-;;       Restore last-command at end.
-;; 2007/03/20 dadams
-;;     icicle-execute-extended-command-1: When wrong-number-of-args, icicle-help-on-candidate.
-;; 2007/03/14 dadams
-;;     icicle-dired-saved-file-candidates, icicle-buffer, icicle-(find|locate|recent)-file:
-;;       Put 200 as value of property icicle-Completions-window-max-height.
-;;     Added ;;;###autoload for icicle-define*.
-;; 2007/03/09 dadams
-;;     icicle-search, icicle-map, icicle-(remove|search|select)-region, icicle-imenu,
-;;     icicle-occur, icicle-compilation-search:
-;;       Bound icicle-transform-function to nil if interactive-p.
-;;     icicle-comint-search: Updated doc string to mention false positives in command matching.
-;;     Removed eval-when-compile from requires of Icicles libraries (except icicle-mac.el).
-;; 2007/03/08 dadams
-;;     icicle-insert-kill: Bound icicle-delete-candidate-object.
-;; 2007/03/07 dadams
-;;     icicle-delete-windows, icicle-map-action, icicle-search-action,
-;;     icicle-choose-candidate-of-type, icicle-complete-keys-help:
-;;       Use 0, not t, as frame arg to get-buffer-window.
-;; 2007/03/06 dadams
-;;     icicle-search, icicle-map, icicle-(remove|search|select)-region:
-;;       Bind icicle-inhibit-sort-p to non-nil to prevent user sorting.
-;;       Update doc string to mention that you cannot sort candidates.
-;;     icicle-(remove|search|select)-region: Sort candidates by buffer and then by tag.
-;;     icicle-search-region: Bound icicle-delete-candidate-object.
-;;     icicle-search, icicle-map: Don't add or subtract one from candidate # if use action fn.
-;;     icicle-search:
-;;       If require-match, set icicle-completion-candidates and marker to reflect final choice.
-;;     Renamed: icicle-get-current-candidate to icicle-get-alist-candidate.
-;;     Added: icicle-region-sorted, icicle-region-add-buffers.
-;; 2007/03/04 dadams
-;;     icicle-get-current-candidate: Return nil if icicle-candidates-alist is nil.
-;; 2007/03/02 dadams
-;;     icicle-remove-buffer-config, icicle-remove-buffer-candidate: Removed extraneous quote.
-;;     icicle-(find|recent)-file(-other-window): Bound icicle-delete-candidate-object.
-;; 2007/02/28 dadams
-;;     icicle-buffer-list, icicle-color-theme: Bound icicle-delete-candidate-object.
-;; 2007/02/27 dadams
-;;     icicle-recent-file(-other-window): Changed INITIAL-INPUT completing-read arg to nil.
-;; 2007/02/25 dadams
-;;     Added: icicle-remove-buffer-candidate-action, icicle-remove-buffer-config-action.
-;;     icicle-add-buffer-candidate, icicle-bookmark, icicle-buffer-config:
-;;       Bound icicle-delete-candidate-object.
-;; 2007/02/24 dadams
-;;     Added: icicle-kill-a-buffer-and-update-completions (was kill-a-buffer),
-;;            icicle-delete-region-from-alist.
-;;     icicle-delete-window: Use icicle-kill-a-buffer...-completions, not icicle-kill-a-buffer.
-;;     icicle-buffer(-other-window), icicle-choose-candidate-of-type:
-;;       Bind icicle-delete-candidate-object to icicle-kill-a-buffer.
-;;       Bind icicle-sort-function to self if icicle-buffer-sort-function is nil.
-;;     icicle-select-region:
-;;       Bind icicle-delete-candidate-object to icicle-delete-region-from-alist.
-;;     icicle-remove-region: Rewrote.
-;;       Use icicle-delete-region-from-alist.
-;;       Use icicle-remove-candidate-display-others, but don't redisplay unless completing.
-;;       Respect icicle-add-buffer-name-flag (append buffer names).
-;; 2007/02/20 dadams
-;;     Added: icicle-search-region-action.  Open file associated with candidate.
-;;     icicle-search-region:
-;;       Use icicle-search-region-action.  Updated doc string.  Bind icicle-list-*.
-;;       Fix default completing-read value.  Respect icicle-add-buffer-name-flag.
-;;     icicle-select-region-action: Open file associated with candidate.
-;;     icicle-region-open-all-files: Ignore files that are not readable.
-;;     icicle-regions: Remove only non-existent buffers that are not associated with files.
-;; 2007/02/19 dadams
-;;     Added: icicle-region-open-all-files.
-;;     icicle-(search|select)-region, icicle-search: Use icicle-region-open-all-files.
-;;     icicle-add-region: Add file name to region entry in alist.
-;;     icicle-select-region-action, icicle-region-help, icicle-search:
-;;       Updated selectors for point and mark, because of addition of file name.
-;;     icicle-region-help: Add file name to help message.
-;; 2007/02/18 dadams
-;;     Added: icicle-first-matching-candidate.
-;;     icicle-get-current-candidate: Use icicle-first-matching-candidate, not assoc.
-;; 2007/02/07 dadams
-;;     icicle-search-action: Make *Completions* window dedicated.  Thx to Peter Povinec.
-;; 2007/02/07 dadams
-;;     icicle-search: pop-to-buffer and raise frame. Don't select orig-window.
-;; 2007/02/06 dadams
-;;     icicle-search, icicle-select-region, icicle-search-regexp-scan:
-;;       Respect icicle-add-buffer-name-flag.
-;;     icicle-search: Bound icicle-show-Completions-initially-flag to t.
-;;                    Bound icicle-candidate-help-fn to icicle-search-help.
-;;     icicle-search-regexp-scan: nil BUFFER arg means current buffer now.
-;;     icicle-search-action, icicle-filter-alist: Treat multi-completion case also.
-;;     Added: icicle-search-help.
-;;     icicle-map-action, icicle-search-action: Removed unused local var, curr-cand-string.
-;;     icicle-select-region, icicle-remove-region, icicle-search-region:
-;;       Use icicle-candidates-alist, not regions-w-buffers (but bind it locally too).
-;;     Renamed: icicle-get-current-region-candidate to icicle-get-current-candidate.
-;;     icicle-region-help: Provide region limits also.
-;;     Added note to some doc strings that the command is for Icicle mode only.
-;; 2007/02/02 dadams
-;;     icicle-search: Test for buffers, not buffer names, in WHERE.  Thx to Peter Povinec.
-;;     icicle-buffer-list: Return the list of buffers.
-;; 2007/01/28 dadams
-;;     icicle-complete-keys:
-;;       Bind icicle-sort-functions-alist, using icicle-command-names-alphabetic-p.
-;; 2007/01/22 dadams
-;;     icicle-read-color:
-;;       Removed free var NTH-PARTS.
-;;       Bound icicle-list-nth-parts-join-string the same as icicle-list-join-string.
-;;       Remove duplicates: AliceBlue and alice blue etc.: downcase and remove whitespace.
-;;     Added: icicle-remove-color-duplicates.
-;;     Added soft require of hexrgb.el.
-;;     icicle-*doc, icicle-plist: Bound icicle-candidate-properties-alist.
-;; 2007/01/21 dadams
-;;     Added: icicle-read-color, icicle-make-color-candidate.
-;; 2007/01/18 dadams
-;;     Added: icicle-get-current-region-candidate.
-;;       Use current cand if cycled or `mouse-2'.  Else if single match, use that.  Else error.
-;;     icicle-remove-region, icicle-search-region, icicle-region-help:
-;;       Use icicle-get-current-region-candidate.
-;;     icicle-add-region: Added optional TAG arg and prefix arg treatment.
-;;     icicle-remove-region: Update completions list.  Bind regions-w-buffers.
-;;     icicle-remove-all-regions-in-buffer: Use current buffer name as default.
-;;     Added: icicle-select-region-action.
-;;     icicle-select-region: Use icicle-select-region-action.
-;;     Renamed: option icicle-regions to icicle-region-alist.
-;;     icicle-regions: Sort entries.
-;; 2007/01/17 dadams
-;;    icicle-filter-alist: Reversed arg order.  Return alist arg if filter-keys arg is empty.
-;; 2007/01/12 dadams
-;;    icicle-delete-window: Do icicle-remove-Completions-window if in minibuffer.
-;;    icicle-yank-insert: Do icicle-yank if in minibuffer.
-;;    icicle-(fundoc|vardoc|doc|plist): Added condition-case: protect symbols that error.
-;; 2007/01/01 dadams
-;;    Added: icicle-(add|remove)-candidate-(to|from)-saved-completion-set.
-;;    icicle-add-buffer-config: Use nil, not "nil" as default, if icicle-buffer-sort is nil.
-;;                              Use icicle-define-add-to-alist-command to define it.
-;;    icicle-remove-buffer-config, icicle-remove-saved-completion-set:
-;;      Use icicle-assoc-delete-all, not delete of assoc.
-;;    icicle-remove-saved-completion-set: Update display after removal.
-;;    Reformatted icicle-define(-file)-command, based on setup.el's lisp-indentation-hack.
-;; 2006/12/25 dadams
-;;    Bug fix: icicle-search-action: Use icicle-filter-alist on icicle-candidates-alist.
-;;    icicle-(select|search)-region: Use pop-to-buffer and raise-frame, not set-buffer.
-;;    icicle-select-region: Activate the region.
-;; 2006/12/23 dadams
-;;    Added: icicle-region-help.  Use in icicle-*-region.
-;;    Added: icicle-remove-all-regions-in-buffer, icicle-remove-all-regions-action.
-;;    icicle-(select|search)-region: Ignore regions in non-existent buffers.
-;;    icicle-remove-region: Update the persistent value of icicle-regions.
-;; 2006/12/22 dadams
-;;    Added: icicle-exchange-point-and-mark.
-;;    icicle-customize-icicles-group: icicles -> Icicles (group name).
-;; 2006/12/18 dadams
-;;    icicle-object-action: Remove print arg.  icicle-apply-to-* uses current-prefix-arg now.
-;; 2006/12/17 dadams
-;;    Added: icicle-object-action, icicle-choose-candidate-of-type,
-;;           icicle-read-var-value-satisfying.
-;; 2006/12/16 dadams
-;;    icicle-map-action: Bug fix: Use icicle-candidate-nb, not assoc.
-;;    Added: icicle-goto(-global)-marker, icicle-marker+text, icicle-markers.
-;; 2006/12/10 dadams
-;;    Moved minibuffer and *Completions* commands to new file, icicles-mcmd.el.
-;;    Require icicles-opt.el.
-;;    icicle-buffer-list: Added final message.
-;; 2006/11/26 dadams
-;;    icicle-search-action: Bug fix: Use icicle-candidate-nb, not assoc, to get cand+mrker.
-;;    icicle-*-complete-1: Bug fix: Don't set icicle-current-input to icicle-last-input if nil.
-;;    Renamed: icicle-search-region to icicle-search-region-beg-end.
-;;    Added: icicle-(add|remove|select|search)-region.
-;;    icicle-search: Use icicle-regions for numeric prefix arg.  Updated doc string.
-;;    Added: icicle-Info-index-20 - thx to Tamas Patrovics.  Use it in icicle-Info-index.
-;; 2006/11/25 dadams
-;;    icicle-search: After final selection, select orig-window and give its frame input focus.
-;; 2006/11/24 dadams
-;;    Added: icicle-ensure-overriding-map-is-bound, icicle-universal-argument,
-;;           icicle-universal-argument-more, icicle-negative-argument, icicle-digit-argument,
-;;           icicle-universal-argument-other-key, icicle-universal-argument-minus,
-;;           icicle-kmacro(-action).
-;;    icicle-dabbrev-completion: Don't stop at common root, and use lax completion.
-;;    Replaced icicle-select-window-or-frame by icicle-other-window-or-frame (respects C-u 0).
-;; 2006/11/23 dadams
-;;    icicle-prefix-complete-1: Respect icicle-TAB-shows-candidates-flag.
-;;    icicle-execute-extended-command-1: Treat named keyboard macros too.
-;;    Added: icicle-execute-named-keyboard-macro.
-;; 2006/11/18 dadams icicle-add/update-saved-completion-set, icicle-apropos*, icicle-bookmark,
-;;    icicle-buffer-config, icicle-candidate-set-retrieve, icicle-candidate-set-save,
-;;    icicle-color-theme, icicle-comint-command, icicle-complete-thesaurus-entry,
-;;    icicle-customize-apropos*, icicle-delete-windows, icicle-font, icicle-frame-bg,
-;;    icicle-frame-fg, icicle-insert-kill, icicle-insert-string-from-variable,
-;;    icicle-insert-thesaurus-entry, icicle-locate-file*, icicle-map, icicle-narrow-candidates,
-;;    icicle-remove-buffer-config, icicle-remove-saved-completion-set,
-;;    icicle-reset-option-to-nil, icicle-save-string-to-variable, icicle-search,
-;;    icicle-select-window, icicle-set-option-to-t, icicle-toggle-option:
-;;      Use a specific history variable.
-;; 2006/11/17 dadams
-;;    Added: icicle-select-(frame|window), icicle-select-window-or-frame.
-;; 2006/11/10 dadams
-;;    icicle-mouse-candidate-action: read-event to swallow mouse up event.
-;;    icicle-map-action:
-;;      Don't use icicle-filter-alist - find string in icicle-candidates-alist.
-;;      Unwind-protect to reselect minibuffer frame.  Don't bind case-fold-search.
-;;    icicle-map: enable-recursive-minibuffers.
-;; 2006/11/09 dadams
-;;    icicle-nb-of-candidate-in-Completions: Redefined using binary search, for performance.
-;;    icicle-toggle-ignored-space-prefix: Update doc string to use icicle-dispatch-C-^.
-;;    icicle-search:
-;;      Bind icicle-update-input-hook unconditionally, after icicle-search-regexp-scan.
-;;    icicle-search-regexp-scan: Highlight up to icicle-search-highlight-threshold.
-;;    icicle-search-highlight-all-input-matches:
-;;      Only update input and highlight if icicle-search-highlight-all-current-flag.
-;;    icicle-search-action:
-;;      Don't use icicle-filter-alist - find string in icicle-candidates-alist.
-;;    icicle-search-highlight-cleanup: Bind inhibit-quit to t.
-;; 2006/11/07 dadams
-;;    Added: icicle-toggle-highlight-all-current.
-;; 2006/11/06 dadams
-;;    icicle-search-action:
-;;      Highlight icicle-current-input, not icicle-current-raw-input (not updated).
-;;    Renamed icicle-search-highlight-all-flag to icicle-search-highlight-threshold.
-;; 2006/11/05 dadams
-;;    Added: icicle-search-regexp-scan.
-;;    icicle-search:
-;;      Added buffers arg.  Updated doc string.
-;;      Use icicle-search-regexp-scan:  Scan each buffer in buffers.
-;;                                      Add marker, not position, to icicle-candidates-alist.
-;;      Go to candidate in its buffer.
-;;      Added progress message.
-;;    icicle-search-action: Pop to buffer of candidate (marker) and raise frame.
-;;    icicle-occur:
-;;      Added buffers arg.  Updated doc string.  Call icicle-search-highlight-cleanup.
-;;    icicle-search-highlight-all-input-matches: set-buffer for each ov in dolist (minor opt.).
-;;    icicle-search-highlight-cleanup: Added progress messages.  Minor optimization.
-;; 2006/10/22 dadams
-;;    icicle-complete-keys-action:
-;;      Set last-nonmenu-event to non-mouse info, to ignore *Completions* click.
-;;    icicle-complete-keys-1: Don't use a default value for completing-read.
-;; 2006/10/21 dadams
-;;    Added: icicle-insert-char.
-;;    icicle-add-key+cmd: Respect icicle-complete-keys-self-insert-flag.
-;; 2006/10/20 dadams
-;;    icicle-map, icicle-delete-window: Corrected doc string.
-;; 2006/10/16 dadams
-;;    icicle-add-key+cmd: Protect :enable's eval with condition-case.
-;;    icicle-complete-keys-1:
-;;      No longer use icicle-extra-candidates.
-;;      Use default value of .. for completing-read (except at top level).
-;;    icicle-complete-keys-action: Correct no-match case: must match whole and part.
-;;    icicle-keys+cmds-w-prefix: Add .. to icicle-complete-keys-alist unless at top level.
-;; 2006/10/15 dadams
-;;    icicle-complete-keys:
-;;      Bind icicle-complete-keys-action, not icicle-complete-keys-help, to icicle-*-action-fn.
-;;      Bind orig-buff, orig-window, and icicle-completing-keys-p, for use elsewhere.
-;;    Added: icicle-complete-keys-action using code from icicle-complete-keys.
-;;    icicle-complete-keys-action:
-;;      Use orig-buff and orig-window; restore to originally selected window.
-;;      Error if candidate doesn't match template xxx  =  yyy.
-;;    icicle-complete-keys-1:
-;;      Call icicle-complete-keys-action on chosen candidate.
-;;    icicle-help-on-candidate: Treat key completion also.
-;;    Added from cus-edit+.el: custom-variable-p.
-;;    Moved to icicles-mode.el: icicle-select-minibuffer-contents, next-history-element.
-;;    Moved here from icicles-mode.el: icicle-generic-S-tab.
-;;    icicle-generic-S-tab (bug fix): Do not set last-command to icicle-apropos-complete.
-;;    Added: eval-when-compile's.
-;; 2006/10/13 dadams
-;;    icicle-add-key+cmd:
-;;      Add actual key to icicle-complete-keys-alist.  Thx to Stefan Monnier.
-;;      Don't filter out index (Imenu) keymap.
-;;      Treat :enable condition.
-;;    icicle-complete-keys-1:
-;;      Use actual key recorded in icicle-*-keys-alist. Don't convert to key description.
-;;      Treat digit-argument and negative-argument.
-;;    icicle-complete-keys-alist: Updated doc string for new structure.
-;; 2006/10/08 dadams
-;;    Added: icicle-add-key+cmd, icicle-read-single-key-description.
-;;    Added: icicle-complete-keys-alist.
-;;           Use in icicle-complete-keys-1, icicle-keys+cmds-w-prefix, icicle-add-key+cmd.
-;;    icicle-add-key+cmd: Update binding, depending on its type (menu item etc.).
-;;      Push (cons candidate binding), not just candidate, onto icicle-complete-keys-alist.
-;;    icicle-complete-keys-1:
-;;      Use binding, not just command name.  Call it and put it in (this|last)-command.
-;;      Flipped (corrected) use of icicle-key-descriptions-use-<>-flag.
-;;      Use icicle-read-single-key-description.
-;;    icicle-prefix-keys-first-p, icicle-complete-keys-1, icicle-complete-keys-help,
-;;      icicle-keys+cmds-w-prefix: Don't use icicle-list-*-string.
-;; 2006/10/05 dadams
-;;    icicle-complete-keys-1: Remove icicle-special-candidate property from all candidates.
-;;    icicle-keys+cmds-w-prefix:
-;;      Intern candidate and, if local binding, put icicle-special-candidate property on it.
-;;      Use single string for candidate (don't use multi-completion).
-;; 2006/10/03 dadams
-;;     icicle-complete-keys-1: Treat "..".
-;;     icicle-complete-keys: Updated doc string accordingly.
-;;     icicle-prefix-keys-first-p: ".." is less than all other strings.  Don't hard-code "= ".
-;;     icicle-keys+cmds-w-prefix:
-;;       Filtered out shadowed bindings, icicle-generic-S-tab, and icicle-complete-keys.
-;;       Use only map-keymap & lookup-key, not accessible-keymaps, current-active-maps,
-;;         map-keymap.
-;; 2006/10/01 dadams
-;;     icicle-complete-keys: Bind sort functions, to put prefix keys first, by default.
-;;                           Set last-command, before recursing.
-;;     Replaced icicle-alternative-sort with icicle-toggle-alternative-sorting (new).
-;;     icicle-(apropos|prefix)-complete-1:
-;;       Ensure icicle-(current|last)-input are strings, before compare.
-;;     icicle-keys+cmds-w-prefix: Tolerate empty local and global maps.
-;; 2006/09/30 dadams
-;;     Added: icicle-read-kbd-macro, icicle-edmacro-parse-keys, icicle-toggle-angle-brackets.
-;;     icicle-complete-keys-1, icicle-dabbrev-completion:
-;;       key-description -> icicle-key-description, with icicle-key-descriptions-use-<>-flag.
-;;     icicle-complete-keys-1:
-;;       read-kbd-macro -> icicle-read-kbd-macro, with icicle-key-descriptions-use-<>-flag.
-;;       Got rid of extra space in prompt before colon, when no prefix.
-;;     icicle-keys+cmds-w-prefix: Use single-key-description with icicle-*-use-<>-flag.
-;;     icicle-insert-key-description:
-;;       Change arg to a toggle, and use icicle-key-descriptions-use-<>-flag.
-;;     Bind icicle-candidate-set-(retrieve|save) to C-M-<, C-M->, not C-<, C->.
-;;     icicle-dired-saved-file-candidates*:
-;;       Changed doc strings and messages to use dynamic binding of icicle-candidate-set-save.
-;; 2006/09/24 dadams
-;;     Added: icicle-complete-keys-help.
-;;     icicle-complete-keys:
-;;       Bind icicle-*-action-fn to icicle-complete-keys-help.  Mention help keys in docstring.
-;;     icicle-complete-keys-1:
-;;       Set last-command to command, so completion doesn't think candidate was last-command.
-;;     icicle-keys+cmds-w-prefix: Provide placeholder for future use of generic characters.
-;; 2006/09/23 dadams
-;;     icicle-complete-keys-1:
-;;       Error if there are no keys for the prefix.
-;;       Error, not self-insert-command, for key read-kbd-macro can't convert. condition-case.
-;;       Report error if calling cmd fails.
-;;       Use vconcat for recursive call.
-;;       Read cmd, don't intern it - it might be a lambda or byte-compiled function.
-;;       Remove duplicates.
-;;       Provide KEYS arg to call-interactively, for error reporting.
-;;       Don't bind icicle-must-not-match-regexp to "^Character set .*=  self-insert-command".
-;;     icicle-keys+cmds-w-prefix:
-;;       Treat also local keymap and current minor maps.
-;;       Do nothing if keys+maps is nil.
-;;       Only map-keymap if the target is a keymap.
-;;       Use keymapp, not functionp, as the binding test.
-;;       Only add binding if it is a command or keymap.
-;;       Only add self-insert-command binding if the key is char-valid-p.
-;;       Use format %S, not %s for a command binding.
-;;     icicle-insert-key-description: Added no-angle-brackets-p arg.
-;; 2006/09/22 dadams
-;;     icicle-complete-keys-1:
-;;       Filter out keys described "Character set ...= self-insert-command".
-;; 2006/09/20 dadams
-;;     icicle-complete-keys-1: Treat self-insert-command specially.
-;; 2006/09/17 dadams
-;;     Added: icicle-complete-keys(-1), icicle-*-keys-prefix, icicle-keys+cmds-w-prefix,
-;;     icicle-doc: Removed one \n from each candidate.
-;; 2006/09/12 dadams
-;;     Renamed icicle-switch-to-minibuffer to icicle-insert-completion.
-;;     Added: icicle-switch-to/from-minibuffer.
-;;     icicle-completion-help: Keep focus in the minibuffer after displaying help.
-;; 2006/09/02 dadams
-;;     icicle-help-on-(next|previous)-(apropos|prefix)-candidate,
-;;       icicle-(next|previous)-(apropos|prefix)-candidate-action:
-;;       Use save-selected-window, not save-window-excursion.
-;;     icicle-find-file*: In Dired, ignore errors picking up current-line's file name.
-;;     icicle-mouse-choose-completion: Error if minibuffer is not active.
-;; 2006/08/27 dadams
-;;     icicle-abort-minibuffer-input: If minibuffer not active, just kill buffer *Completions*.
-;;     icicle-execute-extended-command-1, icicle-insert-thesaurus-entry, icicle-search-action:
-;;       Ensure orig-window is live before using it.
-;; 2006/08/23 dadams
-;;     Added: icicle-delete-window(s).
-;;     Added soft require of frame-cmds.el.
-;; 2006/08/22 dadams
-;;     icicle-execute-extended-command-1: Bind this-command, don't set it (fixes C-next).
-;;     icicle-help-on-candidate: If no last candidate, then reset to first matching candidate.
-;;     icicle-*-candidate-action, icicle-help-on-*-candidate: save-window-excursion.
-;; 2006/08/20 dadams
-;;     icicle-find-file*: Use diredp-find-a-file* in Dired mode (Emacs 22 or later).
-;;     Bug fix: icicle-candidate-action: Use icicle-*-candidates, not icicle-next-*-candidate.
-;;              icicle-next-*-candidate(-action): Set icicle-current-completion-mode.
-;; 2006/08/18 dadams
-;;     Added: icicle-Info-goto-node(-(action|cmd)).
-;;     icicle-candidate-action: If no icicle-last-completion-candidate, use first candidate.
-;; 2006/08/15 dadams
-;;     Added: icicle-help-on-*-*-candidate,icicle-mouse-help-on-candidate.
-;;     No longer put icicle-candidate-action-command property on symbols (not used).
-;;     Added: icicle-raise-Completions-frame.
-;;     icicle*-candidate-action, icicle-help-on-candidate: Use icicle-raise-Completions-frame.
-;;     icicle-help-on-candidate: Can use it from *Completions* too now.
-;;                               Use icicle-barf-if-outside-Completions-and-minibuffer.
-;; 2006/08/13 dadams
-;;     Added: icicle-Info-index(-(action|cmd)).
-;; 2006/08/04 dadams
-;;     icicle-*-complete-1, icicle-prefix-word-complete, icicle-keep-only-past-inputs:
-;;       Set icicle-last-completion-command to the explicit command, not this-command.
-;;     icicle-history: Call icicle-last-completion-command, not icicle-apropos-complete.
-;;     icicle-apropos-complete-1, icicle-narrow-candidates:
-;;       Removed binding of icicle-apropos-completing-p (not used).
-;;     Added: icicle-plist, icicle-remove-Completions-window, icicle-pp-eval-expression.
-;;     Added soft require of pp+.el.
-;;     icicle-exit-minibuffer, icicle-minibuffer-complete-and-exit,
-;;       icicle-mouse-choose-completion, icicle-abort-minibuffer-input,
-;;       icicle-(apropos|prefix)-complete-1, icicle-keep-only-past-inputs,
-;;       icicle-insert-thesaurus-entry-cand-fn: Use icicle-remove-Completions-window.
-;;     icicle-doc: Treat doc of faces also.
-;;     icicle-non-whitespace-string-p: Added doc string.
-;; 2006/08/03 dadams
-;;     Added:
-;;       icicle-comint-command, icicle-insert-kill, icicle-insert-for-yank,icicle-yank-insert.
-;;     Bound icicle-comint-command to C-c TAB in comint-mode.
-;;     icicle-search, icicle-comint-search: Cleaned up doc string.
-;; 2006/08/02 dadams
-;;     icicle-comint-search: Mention *-prompt-pattern.  Thx to Kevin Rodgers.
-;;     icicle-insert-string-from-variable: Added more variables to the completing-read alist.
-;; 2006/07/29 dadams
-;;     Added: icicle-dispatch-C-., toggle-icicle-search-cleanup, icicle-toggle-search-cleanup.
-;; 2006/07/23 dadams
-;;     Added: icicle-toggle-transforming.
-;;     icicle-comint-search: Bind icicle-transform-function to icicle-remove-duplicates.
-;; 2006/07/22 dadams
-;;     Added: icicle-comint-search, icicle-comint-send-input, icicle-comint-get-*-input,
-;;            icicle-comint-get-final-choice, icicle-search-generic.
-;;     icicle-search: Added require-match arg for non-interactive calls.
-;;                    Run the hooks if no match and no match required, and if we didn't cycle.
-;;                    Return final choice as value (not used yet).
-;;     icicle-insert-string-from-variable: Use buffer-local value of variable, if there is one.
-;;     icicle-insert-string-from-variable:
-;;       Make sure we use the buffer-local value of the variable, if there is one
-;;       Added comint-prompt-regexp to regexp list.
-;;     Added mode hooks for icicle-compilation-search and icicle-comint-send-input.
-;; 2006/07/20 dadams
-;;     Renamed icicle-arrows-respect-* to icicle-cycling-respects-completion-mode-flag.
-;; 2006/07/19 dadams
-;;     Applied patch from Damien Elmes <emacs@repose.cx>:
-;;       Added: icicle-(next|previous)-context-candidate, icicle-scroll-completions.
-;;       icicle-switch-to-completions, icicle-switch-to-Completions-buf,
-;;         icicle-move-to-next-completion, icicle-map-action, icicle-search-action:
-;;           Use icicle-start-of-completions.
-;;       icicle-(apropos|prefix)-complete-1:
-;;         Set icicle-current-completion-type vs use icicle-arrows-respect-*-flag.
-;;         Use icicle-scroll-completions.
-;;       icicle-current-completion-in-Completions: Use point-min if no previous prop change.
-;;       icicle-keep-only-past-inputs: Use icicle-scroll-completions.
-;;     Renamed icicle-start-of-completions to icicle-start-of-candidates-in-Completions,
-;;             icicle-current-completion-type to icicle-current-completion-mode,
-;;             icicle-*-context-candidate to icicle-(next|previous)-candidate-per-mode,
-;;             icicle-scroll-completions to icicle-scroll-Completions.
-;;     icicle-(next|previous)-context-candidate: Use icicle-barf-if-outside-minibuffer.
-;;     icicle-scroll-Completions: Changed with-selected-window to Emacs 20 equivalent.
-;; 2006/07/18 dadams
-;;     icicle-search: Bind completion-ignore-case to case-fold-search.
-;;     icicle-search-highlight-all-input-matches, icicle-search-action:
-;;       Put search inside condition-case, for bad regexp.
-;;     Added: icicle-toggle-case-sensitivity, toggle-icicle-case-sensitivity.
-;; 2006/07/10 dadams
-;;     Added: icicle-search-region.  Use in search functions.  Thx to Le Wang.
-;; 2006/07/08 dadams
-;;     icicle-search-highlight-all-input-matches: Use *-current-*, not *-current-raw-*.
-;;     icicle-execute-extended-command-1:
-;;       First try a string candidate as arg, then read it to convert it to symbol or number.
-;;       Reset focus back to the minibuffer, in action function.
-;; 2006/07/07 dadams
-;;     Added: icicle-alternative-sort.
-;;     icicle-imenu: Show *Completions* initially for submenu choice (only).
-;;     icicle-execute-extended-command:
-;;       Echo prefix arg in prompt.  Thx: *.dhcp.mdsn.wi.charter.com
-;; 2006/07/06 dadams
-;;     Added (eval-when-compile (require 'icicles-mac)).
-;; 2006/07/05 dadams
-;;     Renamed: icicle-current-regexp-input to icicle-current-raw-input.
-;;     icicle-prefix-complete-1: Don't set icicle-current-raw-input.
-;; 2006/07/04 dadams
-;;     icicle-prefix-complete-1: No longer calculate common prefix and set current input to it.
-;;     Added plist entries to categorize commands:
-;;       icicle-(cycling|completing|candidate-action)-command.
-;;     icicle-(apropos|prefix)-complete-1, icicle-prefix-word-complete,
-;;     icicle-switch-to-Completions-buf, icicle-keep-only-past-inputs, icicle-history:
-;;       Use icicle-cycling-command property.
-;;     icicle-apropos-complete-1: Removed regexp-p arg in call to icicle-save-or-restore-input.
-;; 2006/07/03 dadams
-;;     icicle-(apropos|prefix)-complete-1: deactivate mark after inserting current input.
-;; 2006/06/18 dadams
-;;     icicle-apropos-complete-1, icicle-narrow-candidates: Bind icicle-apropos-completing-p.
-;; 2006/06/09 dadams
-;;     Bug fixes: Picked up matching subdir as default dir, even if there other files match.
-;;                  Thx to Andrey Zhdanov.
-;;                Empty directory not treated as a match.
-;;     icicle-(apropos|prefix)-complete-1:
-;;       If input matches an empty directory, then use that directory as the sole completion.
-;;       Do not expand file-name input before call icicle-file-name-*-candidates.
-;;     icicle-retrieve-last-input: Use insert, not icicle-insert-input (no longer used).
-;;                                 (Input backslashes reverted to slashes.)
-;; 2006/06/08 dadams
-;;     Bug fix: Could not complete after cycling file names.  Thx to Andrey Zhdanov.
-;;     icicle-insert-input: Use icicle-expand-file-name.
-;;     icicle-prefix-complete-1:
-;;       Expand file-name input before call icicle-file-name-prefix-candidates.
-;;       Expand icicle-last-completion-candidate if it is a directory name.
-;; 2006/05/30 dadams
-;;     icicle-erase-minibuffer-or-history-element: Fix for consecutive deletions.
-;; 2006/05/26 dadams
-;;     Added: icicle-erase-minibuffer-or-history-element.
-;; 2006/05/19 dadams
-;;     Renamed icicle-inhibit-reminder* to icicle-reminder*.
-;;     icicle-narrow-candidates: Bind icicle-reminder-prompt-flag to nil, not t.
-;; 2006/05/16 dadams
-;;     Added: icicle-kill(-a)-buffer.
-;; 2006/05/15 dadams
-;;     Renamed: icicle-completion-nospace-flag to icicle-ignore-space-prefix-flag.
-;;     icicle-candidate-set-complement: Put back icicle-ignore-space-prefix-flag.
-;;     icicle-buffer(-other-window): Bind icicle-buffer-ignore-space-prefix-flag.
-;;     Added: icicle-toggle-ignored-space-prefix, toggle-icicle-ignored-space-prefix.
-;; 2006/05/13 dadams
-;;     icicle-occur: Make icicle-search-main-regexp-others unnoticeable instead of
-;;                   setting icicle-search-highlight-all-flag to nil.
-;;     icicle-candidate-set-complement: Use nil, not icicle-completion-nospace-flag.
-;;     Renamed: icicle-search-imenu to icicle-imenu,
-;;              icicle-search-imenu-in-buffer-p to icicle-imenu-in-buffer-p.
-;; 2006/05/12 dadams
-;;     icicle-search-imenu: Remove unmatched submenus.  Error if no imenu for the buffer.
-;;     Added: icicle-search-imenu-in-buffer-p.
-;;     icicle-insert-string-at-point: Use icicle-barf-if-outside-minibuffer.
-;;     Moved to icicles-fn.el: icicle-barf-if-outside-*.
-;;     Moved some commands to minibuffer-cmds section from top-level cmds section.
-;; 2006/05/09 dadams
-;;     Added: icicle-customize-icicles-group, icicle-send-bug-report, icicle-customize-button.
-;; 2006/04/30 dadams
-;;     Added: icicle-map, icicle-map-action.
-;;     icicle-filter-alist: Corrected and simplified.
-;;     icicle-search: Corrected cand-nb adjustment when cycle with action fns.
-;;     Renamed: icicle-search-action-fn to icicle-search-action,
-;;              icicle-search-candidates to icicle-candidates-alist.
-;; 2006/04/28 dadams
-;;     icicle-retrieve-last-input, icicle-(apropos|prefix)-complete-1:
-;;       Use icicle-highlight-initial-whitespace.
-;; 2006/04/25 dadams
-;;     icicle-completion-help: Emacs 21.3's help-insert-xref-button signature is different.
-;; 2006/04/16 dadams
-;;     Added: icicle-search-imenu.
-;;     icicle-search: Bug fixes:
-;;       Treat completion without cycling: error or singleton go-to.
-;;       Only subtract one from candidate number for C- cycling, not regular cycling.
-;; 2006/04/14 dadams
-;;     icicle-search:
-;;       Bug fix: Position was off by one.
-;;       Highlight input match inside each main regexp match (or not).
-;;         Bind icicle-update-input-hook and icicle-incremental-completion-flag.
-;;       Extract code to define icicle-search-action-fn.
-;;       Use icicle-search-candidates instead of local variable search-candidates.
-;;       Respect icicle-search-cleanup-flag.
-;;     Added: icicle-search-highlight-*, icicle-search-action-fn,
-;;            icicle-(insert|save)-text-(from|to)-variable.
-;;     Renamed icicle-search-refined-regexp to icicle-search-current-input.
-;; 2006/04/09 dadams
-;;     icicle-(apropos|prefix)-complete-1: Deal with icicle-arrows-respect-*-flag.
-;;     Moved here from icicles-fn.el: icicle-customize-apropos*, icicle-repeat-complex-command.
-;; 2006/04/07 dadams
-;;     icicle-search: Highlight all occurrences at once (like isearch highlight, but not lazy).
-;;                    Error if no match for initial regexp.
-;;     icicle-occur: Bind icicle-search-highlight-all-flag to nil: don't highlight each line.
-;; 2006/04/02 dadms
-;;     Added: icicle-toggle-regexp-quote, icicle-find-file*-w-wildcards.
-;;     icicle-find-file*: Use icicle-find-file*-w-wildcards.
-;; 2006/03/31 dadams
-;;     icicle-search: Wrap action function with unwind-protect to select minibuffer frame.
-;;                    Use completion-ignore-case when highlighting search hits.
-;;                    Protect delete-overlay with overlayp.
-;;                    Turn off region highlighting (so can see highlighting done here).
-;;                    Removed sit-for-period argument.
-;;     icicle-candidate-set-save: Use prin1 instead of pp.
-;; 2006/03/27 dadams
-;;     Added: icicle-occur.
-;;     icicle-search: Highlight also match of current regexp, inside that of regexp arg.
-;;                    Use new faces icicle-search-*-regexp.
-;;     icicle-search, icicle-switch-to-Completions-buf, icicle-move-to-next-completion:
-;;       Use new, generic icicle-place-overlay.
-;;     Removed icicle-place-search-overlay.
-;; 2006/03/26 dadams
-;;     icicle-search: Use icicle-search-overlay.  Ensure don't match twice at same position.
-;;                    Added regexp arg.  Use 0 as sit-for default.
-;;     Added: icicle-place-search-overlay.
-;; 2006/03/25 dadams
-;;     icicle-prefix-complete: Minor bug fix: Don't save try-completion if not a string.
-;;     icicle-candidate-set-(save|retrieve): Allow use of a variable to save/retrieve.
-;;     Added: icicle-candidate-set-(retrieve-from|save-to)-variable, icicle-*-no-display,
-;;            icicle-prefix-complete-1.
-;;     icicle-apropos-complete-1: Added no-display-p optional arg.
-;;     Use no-display-p arg in calls to icicle-display-candidates-in-Completions.
-;;     icicle-candidate-set-(retrieve-from|save-to)-cache-file: Pass a consp, not t.
-;;     icicle-candidate-set-retrieve: Don't display *Completions*.
-;; 2006/03/24 dadams
-;;     Added icicle-delete-char.
-;; 2006/03/23 dadams
-;;     icicle-candidate-set-define: Rewrote.  Can also use at top level.
-;;       Error if wrong result type.  Sort result.  Use display-completion-list and
-;;       icicle-narrow-candidates (unless at top level).
-;;     icicle-narrow-candidates: Can call from top-level (but not interactively).
-;;     icicle-candidate-set-complement: Use icicle-maybe-sort-and-strip-candidates.
-;;     Mention in doc strings of minibuffer and *Completions* functions: where, key.
-;; 2006/03/22 dadams
-;;     icicle-find-file*: Use default-directory as default, so opens directory on empty input.
-;;     icicle-prefix-complete:
-;;       Save icicle-current-regexp-input.
-;;       Set icicle-current-input to common prefix.  Use it everywhere here.
-;;     Calls to icicle-display-candidates-in-Completions: no root arg now.
-;; 2006/03/21 dadams
-;;     icicle-insert-input: Bug fix: Use directory of input, not default-directory.
-;;                                   Append a slash if input itself is a directory.
-;; 2006/03/20 dadams
-;;     icicle-retrieve-last-input: Insert icicle-current-regexp-input if repeat C-l.
-;;     Added: icicle-insert-input.
-;; 2006/03/19 dadams
-;;     icicle-apropos-complete-1: Call icicle-save-or-restore-input with non-nil regexp-p arg.
-;; 2006/03/17 dadams
-;;     Added: icicle-add/update-saved-completion-set, icicle-remove-saved-completion-set,
-;;            icicle-retrieve-candidates-from-set.
-;;     Removed: icicle-cache-file.
-;;     icicle-candidate-set-retrieve: Read candidates set and use its cache file.
-;;                                    Enable recursive minibuffers.
-;;     icicle-candidate-set-save: Read candidates set and cache-file names.
-;;                                Use icicle-add/update-saved-completion-set.
-;;     icicle-barf-if-outside-minibuffer: Move interactive test to calling functions.
-;;     icicle-files-within: Moved to icicle-fn.el.
-;; 2006/03/16 dadams
-;;     Added: icicle*-saved-completion-set.
-;; 2006/03/14 dadams
-;;     icicle-narrow-candidates: Handle no-catch error.  Don't use icicle-completing-p.
-;;     icicle-candidate-set-complement:
-;;       Do what we do in icicle-candidate-set-retrieve: call icicle-narrow-candidates.
-;;     icicle-candidate-set-(retrieve|complement): Msg when display.
-;;     icicle-(apropos|prefix)-complete-1:
-;;       Removed test for last-command = icicle-candidate-set-complement.
-;; 2006/03/13 dadams
-;;     Added: icicle-candidate-set-(retrieve-from|save-to)-cache-file.
-;;     icicle-candidate-set-(retrieve|save): C-u uses cache file.
-;; 2006/03/12 dadams
-;;     Added: icicle-dired-saved-file-candidates(-other-window), icicle-locate-file*,
-;;            icicle-files-within.
-;; 2006/03/11 dadams
-;;     icicle-find-file*, icicle-delete-file*:
-;;       Reverted to simple form (moved directory control to icicles-mac.el).
-;;     icicle-keep-only-past-inputs: Expand file name relative to directory of last input.
-;; 2006/03/10 dadams
-;;     icicle-find-file*, icicle-delete-file*: Expand file name relative to dir of last input.
-;;     Renamed icicle-minibuffer-contents to icicle-minibuffer-contents-from-minibuffer.
-;; 2006/03/09 dadams
-;;     icicle-barf-if-outside-*: Removed argument - use this-command instead.
-;; 2006/03/08 dadams
-;;     icicle-bookmark: Use default value, not init value, for completing-read.
-;; 2006/03/07 dadams
-;;     icicle-doc: Save table in minibuffer-completion-table, so can access via C-RET too.
-;;     icicle-insert-thesaurus-entry, icicle-*doc:
-;;       Removed binding of icicle-incremental-completion-flag to nil.
-;;     Added: icicle-barf-if-outside-(minibuffer|Completions).  Use in appropriate commands.
-;;     Added: icicle-non-whitespace-string-p.  Use in icicle-*doc.
-;; 2006/03/06 dadams
-;;     Update doc strings of *-thesaurus*.
-;; 2006/03/05 dadams
-;;     Added: icicle-toggle-incremental-completion, toggle-icicle-incremental-completion.
-;; 2006/03/03 dadams
-;;     icicle-*doc: Clarified doc strings.  Updated prompts.
-;;     Added: icicle-help-button.  Use in icicle-completion-help.
-;; 2006/03/02 dadams
-;;     icicle-insert-thesaurus-entry, icicle-complete-thesaurus-entry:
-;;       Use synonyms-ensure-synonyms-read-from-cache.  Clarified doc strings.
-;;     icicle-complete-thesaurus-entry: Error if no word at point.  Correct looking-at regexp.
-;; 2006/03/01 dadams
-;;     Added: icicle-insert-thesaurus-entry, icicle-insert-thesaurus-entry-cand-fn,
-;;            icicle-complete-thesaurus-entry.
-;;     icicle-(previous|next)-(apropos|prefix)-candidate-action: Wrap in save-excursion.
-;;     Use icicle-clear-minibuffer instead of icicle-erase-minibuffer non-interactively.
-;;     icicle-erase-minibuffer: Use icicle-call-then-update-Completions.
+;;       Bind icicle-all-candidates-list-alt-action-fn to icicle-search-replace-all-search-hits.
+;;       Bind replace-count to 0.  Bind icicle-current-input to empty string.
+;;       Updated doc string.
+;;     icicle-search-replace-search-hit:
+;;       Do not bind icicle-completion-candidates, icicle-candidate-nb, icicle-last-input.
+;;       No lack-of-current-candidate error if icicle-all-candidates-action-p.
+;;     Added: icicle-search-action-1 (factored out from icicle-search-action.
+;;     icicle-search-action, icicle-search-help:
+;;       Bind icicle-whole-candidate-as-text-prop-p to nil, to force use of alist.
+;;     icicle-search-action(-1): Do not bind icicle-candidate-nb, so don't save and restore it.
+;;     icicle-search-in-context-default-fn: If replacement tried, then update the dialog state. 
+;;     icicle-search-highlight-and-maybe-replace: REWRITE.
+;;       Msg if string to be replaced is not found in candidate.
+;;       Swap order: Don't search unless first time (or replacing all).
+;;       icicle-search-replace-candidate -> icicle-search-replace-cand-in-alist.
+;;       If replacement done, then: Update alist, minibuffer-completion-table, and
+;;         minibuffer content.  Change candidate nb if navigating next/prev.  Complete again.
+;;         Return indication of whether we tried to replace something.
+;;     icicle-search-replace-cand-in-alist: Added catch, to skip whole list traversal.
+;;     Moved byte-compile quieting defvars to top level.  Added one for tooltip-mode.
+;; 2009/07/20 dadams
+;;     icicle-font: Ensure no nil elements in COLLECTION arg to completing-read, for Emacs 22+.
+;; 2009/06/07 dadams
+;;     icicle-get-alist-candidate -> funcall icicle-get-alist-candidate-function.
+;;     Added: icicle-purge-bad-file-regions.
+;;     icicle-add-region, icicle-(select|search)-region-action:
+;;       Special-case Info buffers.  Thx to Thierry Volpiatto.
+;; 2009/05/28 dadams
+;;     Bind icicle-search-replacement to nil.  (Somehow forgot when moved to icicle-explore.)
+;;     icicle-search-replace-search-hit: Raise an error if icicle-candidate-nb is nil.
+;; 2009/05/26 dadams
+;;     icicle-compilation-search: Use value 'until-move for next-error-highlight.
+;; 2009/05/22 dadams
+;;     Added: icicle-Info-virtual-book. 
+;;     Require icicles-mac.el if load-library doesn't find it.
+;;     icicle-search: Set icicle-search-final-choice to result.
+;;     Created - Split off from icicles-cmd.el.
  
 ;;;(@* "CHANGE LOG FOR `icicles-face.el'")
 ;;
+;; 2009/04/18 dadams
+;;     Removed load-time warning about using Icicles in a text terminal.
+;; 2009/04/12 dadams
+;;     Added: face icicle-mode-line-help.
 ;; 2009/01/13 dadams
 ;;     Added: icicle-extra-candidate.
 ;; 2008/10/26 dadams
@@ -1591,6 +274,236 @@
  
 ;;;(@* "CHANGE LOG FOR `icicles-fn.el'")
 ;;
+;; 2009/10/25 dadams
+;;     Added: icicle-dir-prefix-wo-wildcards.  Use in icicle-insert-cand-in-minibuffer.
+;;     icicle-save-or-restore-input: Remove test comparing last completion with current input.
+;;     icicle-abbreviate-or-expand-file-name: If arg is absolute, do not expand.
+;;     icicle-display-candidates-in-Completions, icicle-prefix-candidates,
+;;       icicle-not-basic-prefix-completion-p:
+;;         Updated for new completion methods.  Use *-current-TAB-method, not old fuzzy flag.
+;; 2009/10/24 dadams
+;;     icicle-unsorted-file-name-*-candidates, icicle-*-any-file-name-candidates-p:
+;;       Got rid of slashed-p.
+;;     icicle-unsorted-file-name-apropos-candidates:
+;;       Set icicle-common-match-string to nil if there are no candidates.
+;;     icicle-apropos-any-file-name-candidates-p:
+;;       When input is a dir, remove final /, so we don't non-match highlight the / (empty dir).
+;;       Bind case-fold-search, for apropos matching.
+;;     icicle-abbreviate-or-expand-file-name: Set DIR to nil if it's relative.
+;; 2009/10/22 dadams
+;;     Added: icicle-file-name-directory.
+;;     icicle-completion-setup-function, icicle-display-candidates-in-Completions,
+;;       icicle-save-or-restore-input, icicle-file-name-directory-w-default,
+;;       icicle-historical-alphabetic-p:
+;;         Use icicle-file-name-directory, not file-name-directory.
+;; 2009/10/17 dadams
+;;     icicle-completion-try-completion: Return RES.
+;; 2009/10/12 dadams
+;;     icicle-unsorted-prefix-candidates, icicle-prefix-any-candidates-p:
+;;       Use length of INPUT, not length from point backward to field-beginning.
+;;     icicle-input-from-minibuffer: Added optional LEAVE-ENVVARS-P arg.
+;;     icicle-next-candidate, icicle-highlight-complete-input:
+;;       Call icicle-input-from-minibuffer with LEAVE-ENVVARS-P arg.
+;;     icicle-completion-all-completions:
+;;       If not basic completion (Emacs 23) and input ends in $, then append $ to cands also.
+;; 2009/09/25 dadams
+;;     icicle-file-name-prefix-candidates: Use whole input, not just nondirectory.
+;;     Added: icicle-not-basic-prefix-completion-p.  Use where appropriate.
+;; 2009/09/19 dadams
+;;     icicle-unpropertize: Remove the internal text properties added by Icicles.
+;;     icicle-completing-read, icicle-read-file-name: Call icicle-unpropertize unconditionally.
+;; 2009/09/12 dadams
+;;     icicle-kill-a-buffer: Bind enable-recursive-minibuffers, to confirm modified buffer.
+;; 2009/09/05 dadams
+;;     icicle-msg-maybe-in-minibuffer: Do nothing if icicle-minibuffer-message-ok-p is nil.
+;; 2009/08/19 dadams
+;;     icicle-candidate-short-help: Return (possibly propertized) STRING.
+;; 2009/08/09 dadams
+;;     Added: icicle-insert-cand-in-minibuffer - factored out code from icicle-next-candidate.
+;;     eval-after-load "crm":
+;;       Test that icy-mode is available using featurep, not fboundp.  Thx to Michael_Heerdegen.
+;; 2009/07/26 dadams
+;;     icicle-completing-read, icicle-read-file-name-1:
+;;       Bind minibuffer-history-variable to itself.
+;; 2009/07/13 dadams
+;;     icicle-read-face-name (Emacs 20 version): Use copy-sequence on prompt, before add prop.
+;; 2009/07/12 dadams
+;;     icicle-display-completion-list:
+;;       Use different protection (fboundp) for fix for latest Emacs 23 crap (base size in cdr).
+;; 2009/07/11 dadams
+;;     icicle-next-candidate:
+;;       If icicle-regexp-quote-flag, regexp-quote before string-match for highlighting root.
+;;     icicle-place-cursor: If icicle-regexp-quote-flag, regexp-quote input to search for it.
+;; 2009/07/02 dadams
+;;     icicle-displayable-cand-from-saved-set:
+;;       If icicle-readable-to-markers returns an atom, just use that.
+;; 2009/06/17 dadams
+;;     icicle-fit-completions-window: Scale text size initially.
+;; 2009/06/07 dadams
+;;     icicle-get-alist-candidate -> funcall icicle-get-alist-candidate-function.
+;;     icicle-mctize-all:  If PRED is nil, so is NEWPRED (use and instead of when).
+;; 2009/05/22 dadams
+;;     Require icicles-mac.el if load-library doesn't find it.
+;; 2009/05/18 dadams
+;;     icicle-display-candidates-in-Completions: deactivate-mark in *Completions* after display.
+;; 2009/05/17 dadams
+;;     icicle-next-candidate: Updated to reflect thumb-frm.el name changes.
+;; 2009/05/17 dadams
+;;     Added: icicle-toggle-icicle-mode-twice.
+;;     In eval-after-load crm: Use icicle-toggle-icicle-mode-twice, not icy-mode calls.
+;; 2009/05/15 dadams
+;;     icicle-unhighlight-lighter: Wrap redisplay in condition-case, like elsewhere.
+;; 2009/05/11 dadams
+;;     Added: icicle-upcase.  Use in place of upcase everywhere, to work around Emacs 20 bug.
+;;     Added: icicle-local-keys-first-p.
+;;     icicle-display-candidates-in-Completions:
+;;       Don't highlight historical candidate if in icicle-hist-cands-no-highlight.
+;; 2009/05/09 dadams
+;;     icicle-input-from-minibuffer: Keep text properties when pick up input.
+;;     icicle-highlight-input-noncompletion(-rest): Use an overlay instead of text property.
+;;     icicle-show-help-in-mode-line: Fix special case for pseudo-key/cmd ..: go up to prefix.
+;; 2009/05/07 dadams
+;;     icicle-display-candidates-in-Completions, in the code that hides common match:
+;;       Don't reset display property to nil.
+;;       Use icicle-common-match-string, not current input.
+;;     icicle-expanded-common-match-1:
+;;       If input doesn't match candidate, return nil.  Throw nil, not input, everywhere.
+;;     *-unsorted(-file-name)-apropos-candidates, *-apropos-any(-file-name)-candidates-p:
+;;       Protect calls to icicle-apropos-complete-match-fn with condition-case, for Emacs 20.
+;;     icicle-place-cursor: Added optional arg.
+;; 2009/05/05 dadams
+;;     icicle-alt-act-fn-for-type:
+;;       Bind completion-ignore-case, based on read-buffer-completion-ignore-case.
+;; 2009/05/03 dadams
+;;     Use (fboundp 'minibuffer-default-add-completions), not (> emacs-major version 22).
+;; 2009/05/01 dadams
+;;     Renamed: icicle-choose-action-for-type to icicle-alt-act-fn-for-type.
+;;     icicle-type-actions-alist: Rewrote.  Handle both list of objs and single obj.
+;;     icicle-quote-file-name-part-of-cmd: Rewrote.  Quote file name always, and only file name.
+;; 2009/04/30 dadams
+;;     icicle-show-in-mode-line: Clear any message (e.g. Computing completion candidates...).
+;; 2009/04/29 dadams
+;;     icicle-get-alist-candidate: If NO-ERROR-P is 'no-error-no-msg, just return nil (no msg).
+;;     icicle-choose-action-for-type: Use lax completion.
+;; 2009/04/28 dadams
+;;     icicle-choose-action-for-type: 
+;;       Moved here from icicles-mac.el, changed to a function, and locally bind
+;;       *-alt-action-fn  to icicle-choose-action-for-type function.
+;;       For undefined TYPE, provide all functions as candidates.
+;;     Added eval-when-compile of load-library icicles-mac.
+;; 2009/04/27 dadams
+;;     icicle-recompute-candidates:
+;;       Keep no-display completion mode, if that's current.
+;;       Set icicle-last-completion-command only if completion type, not user input, changed.
+;;     icicle-complete-again-update: Added icicle-prefix-complete-no-display to first case.
+;; 2009/04/19 dadams
+;;     Use unless instead of or for fset's. (cosmetic)
+;;     icicle-completing-read, icicle-read-from-minibuffer, icicle-read-string:
+;;       Renamed history parameter to HIST-m@%=!$+&^*z, so C-h f output looks less strange.
+;; 2009/04/18 dadams
+;;     Soft-require hexrgb.el unconditionally, not just when there is a window-system.
+;; 2009/04/12 dadams
+;;     icicle-display-candidates-in-Completions: Added number of candidates to mode-line.
+;;     icicle-show-help-in-mode-line: Use face icicle-show-help-in-mode-line.  Fix prefix keys.
+;; 2009/04/11 dadams
+;;     icicle-candidate-short-help:
+;;       Do nothing if either icicle-help-in-mode-line-flag or tooltip-mode is nil.
+;;     icicle-show-help-in-mode-line:
+;;       If no symbol help, try string.
+;;       Handle lambdas, menu-function-# from easy-menu, and prefix keys.
+;;     icicle-make-color-candidate: Construct short help only if user will see it.
+;; 2009/04/10 dadams
+;;     Added: icicle-candidate-short-help, icicle-color-completion-setup (from i*-read-color).
+;;     Moved here from icicle-cmds.el:
+;;      icicle-remove-color-duplicates, icicle-color-help, icicle-make-color-candidate.
+;;     icicle-make-color-candidate: Added short help, using icicle-candidate-short-help.
+;;     icicle-show-help-in-mode-line:
+;;       Treat :icicle-candidate-help text property on strings.
+;;       Use candidate, not cand, for stringp clause, and use icicle-transform-multi-completion.
+;;       Renamed: :icicle-candidate-help to icicle-mode-line-help.
+;; 2009/04/08 dadams
+;;     icicle-show-help-in-mode-line: Treat absolute file names too.
+;; 2009/04/07 dadams
+;;     icicle-show-help-in-mode-line: (bufferp (get-buffer...)...) -> (get-buffer...) Duh.
+;; 2009/04/06 dadams
+;;     Added: icicle-show-help-in-mode-line - from code in icicle-next-candidate:
+;;              Added arg.  Handle: faces, buffer names, file names, :icicle-candidate-help.
+;;     Added: icicle-help-line-(buffer|file).
+;;     icicle-next-candidate: Use icicle-show-help-in-mode-line.
+;; 2009/04/05 dadams
+;;     Added: icicle-show-in-mode-line.
+;;     icicle-next-candidate: Use icicle-show-in-mode-line to show help in mode-line.
+;; 2009/04/04 dadams
+;;     Added: icicle-buffer-smaller-p, icicle-major-mode-name-less-p,
+;;            icicle-mode-line-name-less-p, icicle-buffer-file/process-name-less-p.
+;; 2009/04/03 dadams
+;;     icicle-read-from-minibuffer: Save filtered default val as icicle-filtered-default-value.
+;;     icicle-lisp-vanilla-completing-read: Use icicle-filtered-default-value, not DEF, at end.
+;; 2009/03/29 dadams
+;;     icicle-read-shell-command: If non-nil initial-contents, punt to use original (old-*).
+;; 2009/03/27 dadams
+;;     Don't fset minibuffer-default-add-completions unless > Emacs 22.
+;; 2009/03/27 dadams
+;;     icicle-read-from-minibuffer: Use icicle-filter-wo-input on default-value (all values).
+;;     icicle-completing-read, icicle-read-file-name-1:
+;;       Use icicle-filter-wo-input on default value only to get init value.
+;;     Added: icicle-minibuffer-default-add-completions, icicle-first-N.
+;; 2009/03/26 dadams
+;;     icicle-completing-read, icicle-read-file-name-1:
+;;       Filter default values using icicle-filter-wo-input.
+;;     icicle-filter-wo-input: Return the candidate, if it passes filtering.
+;; 2009/03/16 dadams
+;;     Added: icicle-recentf-make-menu-items.
+;; 2009/03/10 dadams
+;;     icicle-read-shell-command-completing: Applied renamings: icicle-guess-commands-in-path,
+;;       icicle-shell-command-candidates-cache, icicle-recompute-shell-command-candidates.
+;;     Moved to icicles-opt.el and renamed: icicle-shell-command-candidates.
+;; 2009/03/08 dadams
+;;     Added: icicle-quote-file-name-part-of-cmd.
+;;     icicle-read-shell-command-completing:
+;;       Call icicle-quote-file-name-part-of-cmd to escape spaces etc. in file names.
+;;       Removed unneeded minibuffer-local-*-map let bindings.
+;;     icicle-dired-smart-shell-command:
+;;       Protected dired-default-directory with fboundp, for Emacs 20.
+;; 2009/03/01 dadams
+;;     icicle-read-from-minibuffer:
+;;       No longer use icicle-complete-on-demand-cmd and on-demand-map.
+;; 2009/02/28 dadams
+;;     Don't fset old-dired-smart-shell-command here - do after load Dired-X (icicles-mode.el).
+;;     Added for Emacs 20: definition of replace-regexp-in-string.
+;;     icicle-read-(number|string-completing):
+;;       No need for fboundp of replace-regexp-in-string, since provide it now for Emacs 20.
+;;     icicle-read-file-name: Treat directory candidates as special candidates.
+;;     icicle-read-shell-command-completing:
+;;       Candidate help depends on candidate type.
+;;       Use existing icicle-extra-candidates as its own default, not icicle-file-extras.
+;; 2009/02/27 dadams
+;;     icicle-shell-command: Fixed typo: shell-command -> old-shell-command.
+;;     icicle-read-shell-command-completing: Append icicle-file-extras to i*-extra-candidates.
+;; 2009/02/23 dadams
+;;     icicle-read-shell-command-completing:
+;;       Bind icicle-extra-candidates-dir-insert-p, not insert-default-directory, to nil.
+;;     icicle-next-candidate: Protect dir insertion with icicle-extra-candidates-dir-insert-p.
+;; 2009/02/22 dadams
+;;     icicle-dired-read-shell-command: Use minibuffer-default-add-shell-commands if available.
+;; 2009/02/20 dadams
+;;     icicle-read-from-minibuffer: Treat icicle-complete-on-demand-cmd - on-demand completion.
+;;     Added: icicle-dired-smart-shell-command, icicle-read-shell-command-completing,
+;;            icicle-dired-read-shell-command, icicle-extra-candidates-first-p,
+;;            icicle-require-match-p, icicle-shell-command(-on-region).
+;;     icicle-read-shell-command:
+;;       Call icicle-read-shell-command-completing.  Define always, not just when mailcap.
+;;     icicle-dired-guess-shell-command: Just call icicle-read-shell-command-completing.
+;;     icicle-shell-command-candidates: Cache completions in icicle-shell-command-candidates.
+;;     icicle-highlight-input-noncompletion(-rest), icicle-highlight-lighter:
+;;       Use function icicle-require-match-p, not var.
+;;     icicle-completing-p: Test also whether parent map is a completion map.  Always cache.
+;; 2009/02/17 dadams
+;;     icicle-read-shell-command: Handle nil default-value.  Thx to Kao Felix.
+;;     icicle-read-file-name: Append new proxy cands to any existing ones.
+;;                            Don't assume that a proxy cand is a variable.
+;; 2009/01/25 dadams
+;;     Added: *-dired-guess-shell-command, *-read-shell-command, *-shell-command-candidates.
 ;; 2009/01/17 dadams
 ;;     icicle-display-candidates-in-Completions: Highlight Levenshtein (1) match.
 ;;     icicle-unsorted-apropos(-file-name)-candidates, icicle-display-Completions,
@@ -2631,6 +1544,17 @@
  
 ;;;(@* "CHANGE LOG FOR `icicles-mac.el'")
 ;;
+;; 2009/10/22 dadams
+;;     icicle-define-file-command: Use icicle-file-name-directory, not file-name-directory.
+;; 2009/09/17 dadams
+;;     Added: icicle-file-bindings.
+;; 2009/09/16 dadams
+;;     Added: icicle-buffer-bindings.
+;;     icicle-define(-file)-command: Macroexpand bindings, (e.g. to use icicle-buffer-bindings).
+;; 2009/04/28 dadams
+;;     Moved icicle-choose-action-for-type to icicles-fn.el and changed to a function.
+;; 2009/04/26 dadams
+;;     Added: icicle-choose-action-for-type, icicle-with-selected-window.
 ;; 2008/08/31 dadams
 ;;     icicle-define(-file)-command: Select window before call select-frame-set-input-focus.
 ;; 2008/08/18 dadams
@@ -2698,6 +1622,212 @@
  
 ;;;(@* "CHANGE LOG FOR `icicles-mcmd.el'")
 ;;
+;; 2009/10/25 dadams
+;;     icicle-prefix-complete-1: When sole cand, use the candidate, but without any dir.
+;;     Renamed: icicle-next-apropos-match-function to icicle-next-S-TAB-completion-method,
+;;              icicle-toggle-fuzzy-completion to icicle-next-TAB-completion-method (rewrote).
+;;     icicle-(prefix|apropos)-complete-1: Updated no/sole msgs per new completion methods.
+;;     icicle-Completions-mouse-3-menu: Updated with the new command names.
+;;     Updated icicle-help-string-completion.
+;; 2009/10/24 dadams
+;;     icicle-(apropos|prefix)-complete-1:
+;;       Removed code treating empty dir via *-any-*-p and ("").
+;;       When only one candidate, set *-last-completion-candidate to:
+;;         If file-name completion:
+;;           If empty input, the input; if dir candidate, input + /; else the sole candidate.
+;;         Else the sole candidate.
+;; 2009/10/22 dadams
+;;     icicle-insert-input, icicle-candidate-action-1, icicle-keep-only-past-inputs,
+;;       icicle-apropos-complete-and-(narrow|widen):
+;;         Use icicle-file-name-directory, not file-name-directory.
+;; 2009/10/21 dadams
+;;     icicle-prefix-complete-1:
+;;       For empty dir we use "" as pseudo-cand.  Ensure not "" when later test for / last char.
+;; 2009/10/12 dadams
+;;     Added: icicle-input-is-a-completion-p.
+;;     icicle-minibuffer-complete-and-exit, icicle-input-is-a-completion-p:
+;;       Use icicle-input-is-a-completion-p.
+;;     icicle-prefix-complete-1:
+;;       For file-name input: Set, and use, current input without substituting env vars.
+;;                            When sole candidate ends in /, add a / to current input also.
+;; 2009/09/26 dadams
+;;     icicle-narrow-candidates(-with-predicate): Bind icicle-progressive-completing-p to t.
+;; 2009/09/25 dadams
+;;     icicle-prefix-complete-1, icicle-transform-sole-candidate:
+;;       Use icicle-current-input, not (car icicle-completion-candidates).
+;;       Don't set icicle-current-input to (car icicle-completion-candidates) if no-catch.
+;; 2009/09/12 dadams
+;;     icicle-delete-candidate-object: Message if no candidates, in non-ALLP case also.
+;;     icicle-delete-candidate-object-1: Bind icicle-completion-candidates to save & restore it.
+;;     icicle-candidate-action-1, icicle-remove-candidate-display-others,
+;;       icicle-delete-candidate-object, icicle-help-on-candidate,
+;;       icicle-candidate-read-fn-invoke:
+;;         Bind icicle-help-in-mode-line-flag to nil, to avoid help-display delay.
+;;     icicle-update-and-next: Do nothing if user hit another key and there are more candidates.
+;; 2009/09/05 dadams
+;;     icicle-narrow-candidates: Don't raise an error if no candidates.  E.g. C-~.
+;;     Use backward and forward as the values of icicle-cycling-command prop for nav commands.
+;;     Apply renaming of icicle-acting-on-next/prev (removed -p).
+;;     icicle-successive-action: Bind it to value of icicle-cycling-command (nav direction).
+;;     icicle-all-candidates-list-alt-action: Raise error if null icicle-completion-candidates.
+;;     icicle-search-define-replacement: Prevent immediate incremental completion kicking in.
+;;     icicle-(widen|narrow)-candidates(-with-predicate):
+;;       Use literal text for (S-)TAB in error message, to avoid S-iso-*.
+;; 2009/09/02 dadams
+;;     icicle-(prefix|apropos)-complete-1, icicle-narrow-candidates(-with-predicate):
+;;       Impose icicle-top-level-when-sole-completion-delay when *-flag is non-nil.
+;; 2009/08/27 dadams
+;;     icicle-goto/kill-failed-input: Do nothing if the overlay is nowhere.
+;;     icicle-mouse-yank-secondary: If yank-secondary is defined, then pass prefix arg also.
+;; 2009/08/23 dadams
+;;     icicle-narrow-candidates-with-predicate: Added optional arg PREDICATE.
+;; 2009/08/20 dadams
+;;     icicle-successive-action: Don't call icicle-show-help-in-mode-line unless string arg.
+;; 2009/08/11 dadams
+;;     icicle-all-candidates-action-1: Added ALTP arg.  Use in call to *-candidate-action-1.
+;;     icicle-all-candidates(-list)-alt-action: Use new ALTP arg in call with *-alt-action-fn.
+;;     icicle-successive-action: Bind icicle-acting-on-next/prev-p around call to action fn.
+;;     icicle(-mouse)-candidate-action-1:
+;;       No longer bind icicle-* to selves.  You must do it in the action fn if you need it.
+;;     icicle-help-string-completion: C-| -> M-| for Replace all.
+;;     icicle-change-history-variable: Protect with boundp: *-populate-interactive-history-flag.
+;;     Wrap require of icicles-var.el in eval-and-compile.
+;; 2009/08/01 dadams
+;;     icicle-change-history-variable:
+;;       Add icicle-interactive-history to choices only if *-populate-interactive-history-flag.
+;; 2009/07/29 dadams
+;;     icicle-other-history:
+;;       Call icicle-use-interactive-command-history only if Emacs 23+ and non-nil history.
+;; 2009/07/27 dadams
+;;     icicle-help-string-completion: Mention icicle-other-history.
+;; 2009/07/26 dadams
+;;     Added: icicle-change-history-variable, icicle-other-history,
+;;            icicle-use-interactive-command-history.
+;;     icicle-history:
+;;       Use icicle-cycling-p instead of get icicle-cycling-command, to avoid completion cmds.
+;; 2009/07/02 dadams
+;;     icicle-candidate-set-save-1: If icicle-get-alist-candidate-function returns nil, use CAND
+;; 2009/06/26 dadams
+;;     icicle-doremi-zoom-Completions, icicle-doremi-candidate-width-factor:
+;;       Use new key-list options, doremi-...-keys (not -key).  You will need the latest DoReMi.
+;; 2009/06/18 dadams
+;;     doremi-buffer-font-size: Changed increment (doremi-*-key) bindings to =, -, M-=, M-i.
+;;     icicle-help-string-completion: Added icicle-doremi-zoom-Completions.
+;; 2009/06/17 dadams
+;;     Added: icicle-doremi-zoom-Completions.
+;;     icicle-doremi-candidate-width-factor: If no candidates, show message; don't use colors.
+;; 2009/06/07 dadams
+;;     icicle-get-alist-candidate -> funcall icicle-get-alist-candidate-function.
+;; 2009/05/27 dadams
+;;     icicle-minibuffer-complete-and-exit:
+;;       Don't exit if any completion is done, unless icicle-require-match-p is t.
+;; 2009/05/22 dadams
+;;     Require icicles-mac.el if load-library doesn't find it.
+;; 2009/05/18 dadams
+;;     icicle-candidate-set-save-selected-1: If empty inactive region and MOREP, raise error.
+;; 2009/05/17 dadams
+;;     icicle-toggle-C-for-actions: Use icicle-toggle-icicle-mode-twice, not icy-mode calls.
+;; 2009/05/15 dadams
+;;     icicle-(prefix|apropos)-complete-1: Fit minibuffer frame after inserting current input.
+;; 2009/05/11 dadams
+;;     icicle-upcase-if-ignore-case, icicle-next-apropos-match-function: Use icicle-upcase.
+;; 2009/05/09 dadams
+;;     Added: icicle-looking(-back)-at-anychar-regexp-p, icicle-(forward|backward)-char-dots,
+;;            icicle-backward-delete-char-untabify-dots, icicle-delete-backward-char-dots,
+;;            icicle-delete-char-dots, icicle-transpose-chars-dots. icicle-insert-dot(-command),
+;;            icicle-anychar-regexp, icicle-toggle-dot, icicle-convert-dots.
+;;     icicle-backward-delete-char-untabify, icicle-delete-backward-char, icicle-delete-char,
+;;       icicle-transpose-chars: Handle dots.
+;;     icicle-prefix-complete: Convert dots and set icicle-dot-string-internal.
+;;     icicle-goto/kill-failed-input: Use overlay.
+;;     icicle-help-string-completion, icicle-Completions-mouse-3-menu:
+;;       Added dot toggling.  Changed binding for icicle-toggle-hiding-common-match.
+;; 2009/05/08 dadams
+;;     icicle-(prefix|apropos)-complete-1: Fixed typo introduced 2009-05-05.
+;; 2009/05/07 dadams
+;;     icicle-retrieve-(previous|last)-input: Call icicle-place-cursor with optional second arg.
+;; 2009/05/05 dadams
+;;     toggle-icicle-case-sensitivity: Treat read-buffer-completion-ignore-case also (Emacs 23).
+;; 2009/05/03 dadams
+;;     icicle-(prefix|apropos)-complete-1:
+;;       Don't stop cycling if last command was an action (treat as if it was a cycling cmd).
+;;     icicle-all-candidates(-list)(-alt)-action, icicle(-mouse)-candidate(-alt)-action,
+;;       icicle-delete-candidate-object, icicle(-mouse)-help-on-candidate:
+;;         Put property icicle-action-command.
+;; 2009/05/02 dadams
+;;     icicle-candidate-alt-action: Respect icicle-alternative-actions-alist.
+;;     icicle-minibuffer-help: Corrected wrt alt action-for-all keys.
+;; 2009/04/30 dadams
+;;     icicle-next-(prefix|apropos)-candidate, icicle-(prefix|apropos)-complete-1,
+;;       icicle-successive-action:
+;;         Reset icicle-next-(apropos|prefix)-complete-cycles-p to nil, as appropriate.
+;;     icicle-prefix-complete-1: Show mode-line help only at very end, and even after cycling.
+;; 2009/04/29 dadams
+;;     icicle-apply-to-saved-candidate:
+;;       Pass no-error-no-msg to icicle-get-alist-candidate function.
+;;       If icicle-get-alist-candidate finds no function, get function from car of entry.
+;;     icicle-apropos-complete-and-(narrow|widen): Handle icicle-apropos-complete-no-display.
+;; 2009/04/27 dadams
+;;     icicle-(prefix|apropos)-complete-1:
+;;       Set icicle-last-completion-command to icicle-*-complete-no-display if arg NO-DISPLAY.
+;;     icicle-history: If icicle-last-completion-command is nil, call icicle-apropos-complete.
+;; 2009/04/26 dadams
+;;     Wrap load of icicles-mac in eval-when-compile, and use load-library, not require.
+;;     Require icicles-opt before icicles-var (not important).
+;; 2009/04/20 dadams
+;;     Added: icicle-(previous|next)-candidate-per-mode-alt-action.
+;; 2009/03/19 dadams
+;;     mouse-choose-completion: Don't fset unless standard function is defined.
+;;     Use when/unless instead of or for fset's. (cosmetic)
+;; 2009/04/15 dadams
+;;     Added: icicle-(next|previous)-candidate-per-mode-help.
+;;     icicle-successive-action: Set mode only if known.  Leave it alone for per-mode functions.
+;;     icicle-(apropos|prefix)-complete-1:
+;;       Don't show help in mode-line when icicle-top-level-when-sole-completion-flag = t.
+;; 2009/04/12 dadams
+;;     icicle-successive-action: Inhibit help in mode line until after action is finished.
+;; 2009/04/06 dadams
+;;     icicle-(prefix|apropos)-complete-1, icicle-candidate-set-retrieve-1,
+;;       icicle-keep-only-past-inputs:
+;;         Call icicle-show-help-in-mode-line for completed input.
+;;     icicle-(prefix|apropos)-complete-1:
+;;       Don't highlight complete input or show help if icicle-*-complete-and-exit-p is bound.
+;; 2009/04/04 dadams
+;;     Renamed: icicle-sort-by-last-use to icicle-sort-by-last-use-as-input.
+;;     icicle-change-sort-order: Purge any nil entries from icicle-sort-functions-alist.
+;;     icicle-current-sort-functions: Respect icicle-buffer-name-sort-predicate.
+;;     icicle-reverse-sort-order: Echo icicle-current-sort-order.
+;; 2009/03/16 dadams
+;;     icicle-candidate-action-1: Respect icicle-use-candidates-only-once-alt-p.
+;; 2009/03/10 dadams
+;;     icicle-remove-Completions-window: Wrap with condition-case, to ignore "Attempt..." error.
+;; 2009/03/01 dadams
+;;     Added: icicle-completing-read+insert, icicle-read+insert-file-name.
+;; 2009/02/28 dadams
+;;     No soft require of subr-21.el now, since provide replace-regexp-in-string for Emacs 20.
+;; 2009/02/23 dadams
+;;     icicle-mouse-choose-completion, icicle-(prefix|apropos)-complete-1,
+;;       icicle-insert-completion, icicle-mouse-candidate-action-1, icicle-update-and-next,
+;;       icicle-narrow-candidates(-with-predicate), icicle-keep-only-past-inputs,
+;;       icicle-insert-input:
+;;         Protect dir insertion with icicle-extra-candidates-dir-insert-p.
+;;     icicle-choose-completion: Use icicle-extra-candidates-dir-insert-p to reset base-size=0.
+;; 2009/02/20 dadams
+;;     Added: icicle-sort-extra-candidates-first.
+;;     icicle-candidate-action-1: Use function icicle-require-match-p, not variable.
+;; 2009/02/17 dadams
+;;     icicle-exit-minibuffer: Don't put nil face property on input.  Thx to Daniel Clemente.
+;; 2009/02/04 dadams
+;;     icicle-(prefix|apropos)-complete-1:
+;;       Do not set icicle-current-input to icicle-last-input unless also icicle-cycling-p.
+;;       Do not cycle unless also was already cycling or icicle-next-*-complete-cycles-p.
+;;       Set icicle-next-*-complete-cycles-p, at end, to save whether input was completed some.
+;; 2009/02/01 dadams
+;;     Added: icicle-up-directory, icicle-replace-input-w-parent-dir.
+;; 2009/01/24 dadams
+;;     icicle-narrow-candidates(-with-predicate):
+;;       Bind icicle-apropos-complete-match-fn to icicle-last-apropos-complete-match-fn.
+;;     icicle-next-apropos-match-function: Save new value as *-last-apropos-complete-match-fn.
 ;; 2009/01/18 dadams
 ;;     icicle-(prefix|apropos)-complete-1:
 ;;       Don't set icicle-current-input to icicle-last-input if icicle-edit-update-p.
@@ -3439,9 +2569,124 @@
  
 ;;;(@* "CHANGE LOG FOR `icicles-mode.el'")
 ;;
+;; 2009/10/25 dadams
+;;     icicle-mode, icicle-define-icicle-maps, icicle-bind-completion-keys:
+;;       Updated doc string, menus, keys for completion-method command renamings.
+;; 2009/09/26 dadams
+;;     icicle-minibuffer-setup: Don't complete if icicle-progressive-completing-p.
+;; 2009/09/16 dadams
+;;     icy-mode: Add icicle-insert-buffer to doc string.
+;;     icicle-define-icicle-maps: Added icicle-insert-buffer to icicle-menu-map.
+;; 2009/09/10 dadams
+;;     icicle-bind-key-completion-keys-in-keymaps-from: Don't exclude menu maps.
+;; 2009/09/03 dadams
+;;     icicle-add-menu-item-to-cmd-history: Wrap in condition-case, since on pre-command-hook.
+;; 2009/08/18 dadams
+;;     icicle-add-menu-item-to-cmd-history:
+;;       Ensure this-command-keys-vector is not empty.  Thx to Kai Tetzlaff and Lennart Borgman.
+;; 2009/08/09 dadams
+;;     icicle-minibuffer-setup: Set region background for recursive minibuffers too.
+;;     icicle-restore-region-face: Don't restore unless going back to top level.
+;; 2009/08/01 dadams
+;;     Added: icicle-add-menu-item-to-cmd-history.  Thx to Lennart Borgman.
+;;     icy-mode: add/remove pre-command-hook, respecting icicle-menu-items-to-history-flag.
+;;     call-interactively defadvice: Do not save let savehist save icicle-interactive-history.
+;; 2009/07/29 dadams
+;;     Change advice for call-interactively:
+;;       Use it only for Emacs 23+.  Disable it to begin with.  
+;;       Add only (non-mouse command) symbols to history.
+;;     icy-mode (Emacs 23+):
+;;       Enable/disable advice icicle-save-to-history when mode is turned on/off.
+;;       Enable the advics only if non-nil icicle-populate-interactive-history-flag.
+;;     icy-mode (Emacs 20-21): Remove advice icicle-save-to-history.
+;; 2009/07/26 dadams
+;;     Advise call-interactively to save command to icicle-interactive-history.
+;;     icicle-(bind|restore)-completion-keys: Bind/restore C-M-pause as icicle-other-history.
+;; 2009/07/13 dadams
+;;     Emacs 22+:
+;;       Added describe-face defadvice (icicle-respect-WYSIWYG).  icicle-mode: (de)activate it.
+;; 2009/06/18 dadams
+;;     icicle-mode: Added icicle-doremi-zoom-Completions to doc string.
+;; 2009/06/17 dadams
+;;     icicle-(bind|restore)-completion-keys: Bind icicle-doremi-zoom-Completions to C-x -.
+;;     icicle-define-icicle-maps:
+;;       Add icicle-doremi-zoom-Completions to Options menu.
+;;       Change visible condition for all doremi stuff to ensure *Completions* is showing.
+;; 2009/05/27 dadams
+;;     icicle-retrieve-(next|previous)-input: Removed unused (always nil) arg DONT-COMPLETE-P.
+;; 2009/05/22 dadams
+;;     icicle-define-icicle-maps: Added icicle-Info-virtual-book to menu.
+;;     Require icicles-cmd[12].el.
+;; 2009/05/17 dadams
+;;     dolist eval-after-load at end: Use icicle-toggle-icicle-mode-twice, not icy-mode calls.
+;; 2009/05/09 dadams
+;;     icicle-define-icicle-maps: Added icicle-toggle-dot to options menu.  Updated C-x . key.
+;;     icicle-(bind|restore)-completion-keys:
+;;       Bind *-toggle-dot to C-M-., *-toggle-hiding-common-match to C-x .,
+;;            *-insert-dot-command to ..
+;;     icy-mode: Mention icicle-toggle-dot in doc string.
+;; 2009/05/02 dadams
+;;     icicle-minibuffer-setup: Set icicle-cmd-reading-input to this-command.
+;; 2009/04/30 dadams
+;;     icicle-minibuffer-setup: Reset icicle-next-(prefix|apropos)-complete-cycles-p to nil.
+;; 2009/04/20 dadams
+;;     icicle-bind-completion-keys: Don't bind C-S-(up|down|next|prior) explicitly.
+;;     icicle-restore-completion-keys:
+;;       Restore: icicle-(prefix|apropos)-cycle-(previous|next)-alt-action-keys,
+;;                icicle-modal-cycle-(up|down)-alt-action-keys.
+;;       Don't restore C-S-(up|down|next|prior) explicitly.
+;;     icicle-define-cycling-keys:
+;;       Bind/Restore: icicle-(prefix|apropos)-cycle-(previous|next)-alt-action-keys,
+;;                     icicle-modal-cycle-(up|down)-alt-action-keys.
+;; 2009/04/19 dadams
+;;     icicle-redefine-standard-commands: Added defalias for customize-apropos-options-of-type.
+;;     eval-after-loads: Use when/unless instead of and/or for fset's. (cosmetic)
+;; 2009/04/18 dadams
+;;     icicle-mode: Mention in doc string: you might want to customize keys if no window mgr.
+;; 2009/04/16 dadams
+;;     icicle-restore-completion-keys, icicle-define-cycling-keys:
+;;       Use icicle-(prefix|apropos)-cycle-(previous|next)-help-keys.
+;; 2009/04/15 dadams
+;;     icicle-bind-completion-keys: Removed bindings for C-M-(up|down|prior|next).
+;;     icicle-restore-completion-keys: Unbind icicle-modal-cycle-(up|down)-help-keys.
+;;     icicle-define-cycling-keys: Bind/unbind all help keys (including modal ones).
+;; 2009/03/27 dadams
+;;     icicle-(redefine|restore)-standard-commands:
+;;       Added icicle-minibuffer-default-add-completions.
+;; 2009/03/16 dadams
+;;     icicle-define-icicle-maps: Use :visible for Icicle submenus themselves.
+;;     icicle-(redefine|restore)-standard-commands: Added icicle-recentf-make-menu-items.
+;;     Added eval-after load for recentf.el.
+;; 2009/03/15 dadams
+;;     icicle-mode: Added to doc string: icicle-recompute-shell-command-candidates,
+;;                                       icicle-remove-file-from-recentf-list.
+;;     icicle-define-icicle-maps: Added icicle-remove-file-from-recentf-list to menus.
+;; 2009/03/10 dadams
+;;     icicle-mode: Don't reset icicle-shell-*-cache if icicle-guess-commands-in-path is load.
+;;     Applied renaming: icicle-shell-command-candidates to *-cache
+;; 2009/03/01 dadams
+;;     icicle-define-minibuffer-maps:
+;;       Bind icicle-completing-read+insert, icicle-read+insert-file-name.  Add to Minibuf menu.
+;; 2009/02/28 dadams
+;;     fset old-dired-smart-shell-command after load Dired-X.
+;; 2009/02/20 dadams
+;;     icicle-mode: Reset icicle-shell-command-candidates to nil.
+;;     icicle-minibuffer-setup:
+;;       Use function icicle-require-match-p, not var.
+;;       Do not reset icicle-completing-p to nil (reset by icicle-require-match-p).
+;;     icicle-(redefine|restore)-standard-commands:
+;;       Redefine dired-read-shell-command, not dired-guess-shell-command.
+;;       Redefine: dired-smart-shell-command, shell-command(-on-region).
+;;     Added eval-after load for dired-read-shell-command for dired-aux.el (and for dired-x.el).
+;;     eval-after-load for read-shell-command: Don't do it only when mailcap can be loaded.
+;; 2009/02/01 dadams
+;;     icicle-define-minibuffer-maps: Bind C-backspace to icicle-up-directory.
+;; 2009/01/25 dadams
+;;     icicle-(redefine|restore)-standard-commands:
+;;       Aliases for dired-guess-shell-command, read-shell-command.  Also eval-after-load's.
 ;; 2009/01/23 dadams
 ;;     icicle-(bind|restore)-other-keymap-keys:
-;;       For sh-mode-map, remap comint-dynamic-complete, don't (un)bindTAB.  Thx to Seb Luque.
+;;       For sh-mode-map, remap comint-dynamic-complete, don't (un)bind TAB.  Thx to Seb Luque.
 ;; 2009/01/18 dadams
 ;;     Renamed Open Dired for Saved Completion Candidates to Open Dired for Chosen Files.
 ;; 2009/01/06 dadams
@@ -4165,6 +3410,89 @@
  
 ;;;(@* "CHANGE LOG FOR `icicles-opt.el'")
 ;;
+;; 2009/10/25 dadams
+;;     Added: icicle-TAB-completion-methods.
+;;     Removed: icicle-fuzzy-completion-flag, icicle-prefix-completion-is-basic-flag.
+;;     Renamed: icicle-apropos-match-fns-alist to icicle-S-TAB-completion-methods-alist.
+;; 2009/10/12 dadams
+;;     icicle-top-level-key-bindings: Added bindings for icicle-bookmark(-other-window).
+;;     icicle-prefix-completion-is-basic-flag: Make it a constant for pre-Emacs 23.
+;; 2009/10/06 dadams
+;;     icicle-keymaps-for-key-completion: Added bookmark-bmenu-mode-map to default value.
+;;     icicle-sort-functions-alist: Use a separate defcustom for Emacs 20, since no :type alist.
+;; 2009/09/25 dadams
+;;     Added: icicle-prefix-completion-is-basic-flag.
+;;     Changed default value of:
+;;       icicle-candidate-width-factor          from 70  to 80
+;;       icicle-Completions-text-scale-decrease from 0.8 to 0.66.
+;; 2009/09/16 dadams
+;;     icicle-top-level-key-bindings: Added remap for icicle-insert-buffer.
+;; 2009/09/05 dadams
+;;     icicle-keymaps-for-key-completion: Added facemenu-keymap.
+;;     icicle-search-replace-common-match-flag: Fixed doc string: C-M-| -> M-;.
+;;     icicle-expand-input-to-common-match-flag: Fixed doc string: C-| -> C-;.
+;; 2009/09/02 dadams
+;;     Added: icicle-region-bookmarks-flag, icicle-top-level-when-sole-completion-delay.
+;;     icicle-region-alist: Updated doc string. Added :group Icicles-Searching.
+;; 2009/08/19 dadams
+;;     icicle-bookmark-name-length-max:
+;;       Changed default value from 40 to 70.  It is now the total name length.  Updated doc.
+;; 2009/08/01 dadams
+;;     Added: icicle-menu-items-to-history-flag.
+;; 2009/07/29 dadams
+;;     Added: icicle-populate-interactive-history-flag.
+;; 2009/06/17 dadams
+;;     Added: icicle-Completions-text-scale-decrease.
+;; 2009/05/20 dadams
+;;     icicle-keymaps-for-key-completion: Added prefix-key maps senator-mode-map,
+;;       srecode-mode-map, jde-mode-map, jde-jdb-mode-map.  Thx to Daniel Clemente.
+;; 2009/05/17 dadams
+;;     icicle-type-actions-alist: Updated to reflect thumb-frm.el name changes.
+;; 2009/05/10 dadams
+;;     icicle-list-join-string: Don't set display property for Emacs 21 (Emacs bug).
+;; 2009/05/09 dadams
+;;     Added: icicle-dot-string, icicle-dot-show-regexp-flag, icicle-anychar-regexp, 
+;; 2009/05/07 dadams
+;;     icicle-list-join-string: Use copy-sequence in default value, so users see original sexp.
+;; 2009/05/02 dadams
+;;     Added: icicle-alternative-actions-alist.
+;; 2009/05/01 dadams
+;;     Added function to icicle-type-actions-alist: icicle-shell-command-on-file.
+;; 2009/04/26 dadams
+;;     Added: icicle-type-actions-alist, icicle-use-anything-candidates-flag.
+;; 2009/04/20 dadams
+;;     Added: icicle-(prefix|apropos)-cycle-(next|previous)-alt-action-keys,
+;;            icicle-modal-cycle-(down|up)-alt-action-keys.
+;; 2009/04/18 dadams
+;;     Soft-require hexrgb.el unconditionally, not just when there is a window-system.
+;;     icicle-region-background: If frame background is unspecified, consider it white.
+;;                               Don't use frame background unless it is a valid color name.
+;;                               Use region background if cannot compute saturation.
+;; 2009/04/16 dadams
+;;     Added: icicle-(prefix|apropos)-cycle-(next|previous)-help-keys.
+;; 2009/04/15 dadams
+;;     Added: icicle-modal-cycle-(up|down)-help-keys.
+;; 2009/04/05 dadams
+;;     Added: icicle-help-in-mode-line-flag.
+;; 2009/03/10 dadams
+;;     Moved here from icicles-fn.el: icicle-shell-command-candidates.
+;;     Moved here from icicles-var.el: icicle-shell-command-candidates.
+;;     Renamed: icicle-shell-command-candidates (fn) to icicle-compute-shell-command-candidates,
+;;              icicle-shell-command-candidates (var) to icicle-shell-command-candidates-cache,
+;;              icicle-guess-cmds-in-path-flag to icicle-guess-commands-in-path.
+;;     icicle-guess-commands-in-path: Boolean -> choice.  Default is now first-use.
+;;     icicle-compute-shell-command-candidates: Don't update cache variable here.
+;;     icicle-shell-command-candidates-cache: Initialize per icicle-guess-commands-in-path.
+;; 2009/03/08 dadams
+;;     Added: icicle-quote-shell-file-name-flag.
+;; 2009/03/01 dadams
+;;     Added: icicle-completing-read+insert-keys, icicle-read+insert-file-name-keys.
+;;     Removed: icicle-complete-on-demand-keys.
+;; 2009/02/20 dadams
+;;     Added: icicle-complete-on-demand-keys (not yet used).
+;;     Renamed: icicle-dired-guess-all-shell-cmds-flag to icicle-guess-cmds-in-path-flag.
+;; 2009/01/25 dadams
+;;     Added: icicle-dired-guess-all-shell-cmds-flag.
 ;; 2009/01/17 dadams
 ;;     Added: icicle-levenshtein-distance.
 ;;     icicle-apropos-match-fns-alist: Added icicle-levenshtein(-strict)-match.
@@ -4516,6 +3844,51 @@
  
 ;;;(@* "CHANGE LOG FOR `icicles-var.el'")
 ;;
+;; 2009/10/25 dadams
+;;     Added: icicle-current-TAB-method.
+;;     Updated icicle-general-help-string with new command names.
+;; 2009/09/26 dadams
+;;     Added: icicle-progressive-completing-p.
+;; 2009/09/25 dadams
+;;     Removed: icicle-respect-completion-styles-p.  See option *-TAB-respects-*-styles-flag.
+;; 2009/09/05 dadams
+;;     Added: icicle-minibuffer-message-ok-p.
+;;     Renamed icicle-acting-on-next/prev-p to icicle-acting-on-next/prev.
+;; 2009/07/26 dadams
+;;     Added: icicle-command-abbrev-history (belated), icicle-interactive-history.
+;; 2009/05/17 dadams
+;;     icicle-predicate-types-alist: Updated to reflect thumb-frm.el name changes.
+;; 2009/05/11 dadams
+;;     Added: icicle-hist-cands-no-highlight.
+;; 2009/05/09 dadams
+;;     Added: *-input-completion-fail-overlay, *-anychar-regexp, *-dot-string-internal.
+;; 2009/05/02 dadams
+;;     Added: icicle-cmd-reading-input.
+;; 2009/04/28 dadams
+;;     Renamed: icicle-object-predicate-types to icicle-predicate-types-alist.
+;;     icicle-predicate-types-alist:
+;;       Converted to alist, with cdr's from icicle-type-actions-alist.  Added more entries.
+;;     Removed: icicle-object-named-types.
+;; 2009/04/03 dadams
+;;     Added: icicle-filtered-default-value.
+;; 2009-03/16 dadams
+;;     Added: icicle-use-candidates-only-once-alt-p.
+;; 2009/03/15 dadams
+;;     icicle-general-help-string: Added: icicle-recompute-shell-command-candidates,
+;;                                        icicle-remove-file-from-recentf-list.
+;; 2009/03/10 dadams
+;;     Moved icicle-shell-command-candidates to icicles-opt.el and renamed: *-cache.
+;; 2009/03/01 dadams
+;;     Added: icicle-completing-read+insert-candidates.
+;;     Removed: icicle-complete-on-demand-cmd.
+;; 2009/02/23 dadams
+;;     Added: icicle-extra-candidates-dir-insert-p.
+;; 2009/02/20 dadams
+;;     Added: icicle-shell-command-candidates, icicle-complete-on-demand-cmd.
+;; 2009/02/04 dadams
+;;     Added: icicle-next-prefix-complete-cycles-p, icicle-next-apropos-complete-cycles-p.
+;; 2009/01/24 dadams
+;;     Added: icicle-last-apropos-complete-match-fn.
 ;; 2009/01/13 dadams
 ;;     Added: icicle-respect-completion-styles-p (internal var, for now).
 ;; 2008/12/25 dadams
@@ -4731,6 +4104,10 @@
  
 ;;;(@* "CHANGE LOG FOR `icicles.el'")
 ;;
+;; 2009/05/22 dadams
+;;     Require icicles-cmd[12].
+;; 2009/04/13 dadams
+;;     Removed the part of Thierry's text that mentioned emacsclient (no relation to Icicles).
 ;; 2008/12/02 dadams
 ;;     Don't warn, if daemonp.  Thx to Thierry Volpiatto.
 ;; 2007/07/22 dadams
@@ -5632,6 +5009,1583 @@
 ;;     Added: switch-to-completions.
 ;; 1996/04/26 dadams
 ;;     Put escaped newlines on long-line strings.
+ 
+;;;(@* "CHANGE LOG FOR `icicles-cmd.el'" - Deprecated file)
+;;
+;; 2009/05/22 dadams
+;;     Split in two: icicles-cmd1.el, icicles-cmd2.el.  File too large to upload to Emacs Wiki.
+;; 2009/05/20 dadams
+;;     Renamed: *-Info-build-node-completions-fix-* to *-Info-build-node-completions-1.
+;;     icicle-Info-goto-node: Plain C-u now prepends Info file name to candidates.
+;;     icicle-Info-goto-node-1: swapped arg order in call to Info-goto-node nodename (bug fix).
+;;     icicle-Info-read-node-name, icicle-Info-build-node-completions(-1):
+;;       Added optional arg INCLUDE-FILE-P.
+;; 2009/05/11 dadams
+;;     icicle-complete-keys: Use icicle-local-keys-first-p as icicle-sort-function.
+;;                           Bind icicle-hist-cands-no-highlight to ("..").
+;;     icicle-keys+cmds-w-prefix: Propertize candidate "..".
+;;     icicle-dabbrev-completion: Use icicle-upcase.
+;; 2009/05/10 dadams
+;;     Added: icicle-search-(defs|lines|paragraphs|sentences|pages).
+;;     icicle-plist: Pretty-print, unless negative prefix arg (or Emacs 20).
+;;     icicle-search-regexp-scan: Fix to pick up candidate at eob: removed (not (eobp)) test.
+;; 2009/05/05 dadams
+;;     icicle-find-file-(absolute|in-tags-table)(-other-window),
+;;       icicle-(recent|locate)-file(-other-window), icicle-describe-option-of-type,
+;;       icicle-(vardoc|fundoc|doc|plist), icicle-goto-global-marker:
+;;         Remove quote before face name, for icicle-candidate-properties-alist value.
+;;     icicle-buffer(-other-window|-list), icicle-kill-buffer, icicle-choose-candidate-of-type:
+;;       Bind completion-ignore-case, based on read-buffer-completion-ignore-case.
+;; 2009/05/01 dadams
+;;     Added: icicle-shell-command-on-file.
+;;     Bind both icicle-all-candidates-list-alt-action-fn and icicle-candidate-alt-action-fn
+;;       to icicle-alt-act-fn-for-type for appropriate type - same commands as for 2009/04/26,
+;;       except removed these for *recent* (mistaken).
+;;     Use renaming from icicles-fn.el: *-choose-action-for-type -> *-alt-act-fn-for-type.
+;; 2009/04/28 dadams
+;;     icicle-object-action: 
+;;       At end, just apply the fn returned by icicle-choose-action-for-type to chosen object.
+;;       Use icicle-type-actions-alist, not icicle-object-named-types.
+;;       Update to use with icicle-predicate-types-alist (not flat list of preds).
+;;     icicle-choose-candidate-of-type: Handle color type too.
+;;     icicle-get-anything-actions-for-type:
+;;       Highlight Anything actions using face icicle-special-candidate.
+;; 2009/04/26 dadams
+;;     icicle-marker+text, icicle-compilation-search-in-context-fn:
+;;       Bind inhibit-field-text-motion to t, to ensure real end-of-line.
+;;     Load icicles-mac (at compile time) using load-library, to ensure latest .elc.
+;;     Bind icicle-candidate-alt-action-fn, where appropriate, to icicle-choose-action-for-type:
+;;       *-lisp-complete-symbol, *-customize-face(-other-window), *-execute-extended-command,
+;;       *-command-abbrev, *-command-abbrev-command, *-execute-named-keyboard-macro,
+;;       *-set-option-to-t, *-reset-option-to-nil, *-toggle-option, *-select-frame,
+;;       *-delete-windows, *-kill-buffer, icicle-buffer(-other-window),
+;;       *-(add|remove)-buffer-candidate, *-(buffer|face|file|directory)-list,
+;;       *-find-file(-absolute|-in-tags-table)(-other-window),
+;;       *-(recent|locate)-file(-other-window), *-frame-(bg|fg), *-where-is,
+;;       *-apropos(-variable|option|function|command), *-apply, *-save-string-to-variable,
+;;       *--choose-candidate-of-type, *-read-var-value-satisfying, *-read-color. 
+;;     icicle-execute-extended-command-1, icicle-command-abbrev-action:
+;;       Rebind icicle-candidate-alt-action-fn to nil so we don't override it for invoked cmd.
+;;     icicle-object-action: Respect icicle-use-anything-candidates-flag.
+;; 2009/04/25 dadams
+;;     icicle-find-file-in-tags-table(-other-window): Fixed copy+paste typo.
+;; 2009/04/24 dadams
+;;     Added: icicle-find-file-in-tags-table(-other-window).
+;; 2009/04/19 dadams
+;;     icicle-customize-apropos-options-of-type, icicle-dabbrev-completion:
+;;       Don't fset unless standard function is defined.
+;;     Use when/unless instead of or for fset's. (cosmetic)
+;; 2009/04/18 dadams
+;;     Soft-require hexrgb.el unconditionally, not just when there is a window-system.
+;;     icicle-read-color: Error if hexrgb is not loaded.
+;; 2009/04/11 dadams
+;;     Added: icicle-region-add-short-help.
+;;     icicle-font-w-orig-size: Construct short help only if user will see it.
+;;     icicle-describe-opt-of-type-complete, icicle-marker+text,
+;;       icicle-(select|search|remove)-region, icicle-search-(regexp|char-property)-scan:
+;;         Add short help for mode-line and tooltip.
+;;     icicle-region-help: Corrected start/end order.
+;;     icicle-region-help, icicle-search-help: Removed unused help: No help.
+;; 2009/04/10 dadams
+;;     icicle-font-w-orig-size: Provide help string.  Set font to use orig-pointsize also.
+;;     icicle-font: Modify frame - don't use menu-bar-mode.  Get orig menu-bar info from frame.
+;;                  Save orig-pointsize also.
+;;     icicle-frame-(bg|fg):
+;;       Incorporate behavior of icicle-read-color: multi-completion etc.  Added short help.
+;;       (Use icicle-make-color-candidate, icicle-color-completion-setup.)
+;;     icicle-read-color:
+;;       Factored out stuff as new function icicle-color-completion-setup.
+;;       Corrected handling of ARG > 2.
+;;     Moved to icicles-fn.el:
+;;       icicle-color-help, icicle-make-color-candidate, icicle-remove-color-duplicates.
+;; 2009/04/09 dadams
+;;     Added: icicle-font-w-orig-size.
+;;     icicle-font: Use icicle-font-w-orig-size.  No menu bar, to avoid Emacs frame-sizing bug.
+;; 2009/04/04 dadams
+;;     icicle-kill-buffer, icicle-buffer(-other-window|-list), icicle-choose-candidate-of-type:
+;;       Bind icicle-sort-functions-alist for buffer names.
+;; 2009/03/29 dadams
+;;     icicle-make-color-candidate: Use white or black foreground, depending on color value.
+;; 2009/03/27 dadams
+;;     Renamed: icicle-default-buffer-name to icicle-default-buffer-names.
+;;     icicle-buffer(-other-window):
+;;       Bind bufflist, to make it available also to icicle-default-buffer-names.
+;;     icicle-default-buffer-names: Emacs 23: Provide first 4 buffers from bufflist.
+;; 2009/03/26 dadams
+;;     Added: icicle-default-buffer-name.
+;;     icicle-buffer(-other-window), icicle-add-buffer-candidate:
+;;       Use icicle-default-buffer-name.
+;; 2009/03/16 dadams
+;;     icicle-buffer(-other-window), icicle-buffer-list, icicle-kill-buffer,
+;;       icicle-add-buffer-candidate: Treat prefix arg buffers visiting files or frame-local.
+;;     icicle-recent-file(-other-window): Bind icicle-use-candidates-only-once-alt-p to t.
+;; 2009/03/15 dadams
+;;     Added: icicle-remove-file-from-recentf-list, icicle-remove-from-recentf-candidate-action.
+;;     icicle-recent-file(-other-window):
+;;       Bind icicle-candidate-alt-action-fn  to icicle-remove-from-recentf-candidate-action.
+;; 2009/03/10 dadams
+;;     Added: icicle-recompute-shell-command-candidates.
+;; 2009/02/28 dadams
+;;     icicle-find-file-absolute(-other-window):
+;;       Treat directory candidates as special candidates.
+;;     icicle-apropos: Treat functions as special candidates.
+;;     icicle-apropos-variable: Treat user options as special candidates.
+;;     icicle-apropos-function: Treat commands as special candidates.
+;;     icicle-apropos-command (non-apropos-fn+var version): Treat cmds as special candidates.
+;; 2009/02/23 dadams
+;;     icicle-Info-goto-node-action:
+;;       Protect dir insertion with icicle-extra-candidates-dir-insert-p.
+;; 2009/02/17 dadams
+;;     icicle-lisp-complete-symbol:
+;;       Added predicate arg.  Updated wrt Emacs 23 (better var completion).
+;; 2009/02/01 dadams
+;;     icicle-(find-file-absolute|(recent|locate)-file)(-other-window):
+;;       Bind C-backspace to icicle-up-directory.
+;; 2009/01/18 dadams
+;;     icicle-dired-saved-file-candidates(-other-window):
+;;       If there is no saved set, then use icicle-file-list to let user choose a set.
+;;     Added: icicle-dired-chosen-files(-other-window), as aliases.
+;; 2009/01/14 dadams
+;;     Same commands as yesterday: icicle-remove-duplicates -> icicle-remove-dups-if-extras.
+;; 2009/01/13 dadams
+;;     icicle-kill-buffer, icicle-buffer(-other-window), icicle-(buffer|file|directory)-list,
+;;       icicle-find-file(-absolute)(-other-window), icicle-(recent|locate)-file(-other-window),
+;;       icicle-choose-candidate-of-type:
+;;         Bind icicle-transform-function to icicle-remove-duplicates.
+;; 2009/01/05 dadams
+;;     Added: icicle-gud-gdb-complete-command.
+;;     icicle-shell-dynamic-complete(-as)-environment-variable: (require 'shell)
+;;     icicle-shell-dynamic-complete-as-command: Added candidate help for shell commands.
+;; 2009/01/04 dadams
+;;     Added ESS support:
+;;       Added: icicle-comint-replace-by-expanded-filename, icicle-ess-complete-filename,
+;;              icicle-ess(-internal)-complete-object-name, icicle-ess-R-complete-object-name.
+;;       Thx to Sebastian Luque.
+;;     Improved some doc strings.
+;; 2009/01/02 dadams
+;;     icicle-comint-dynamic-complete-as-filename, icicle-comint-dynamic-simple-complete:
+;;       Fixed for comint-completion-autolist, absolute directories.  Thx to Sebastian Luque.
+;; 2009/01/01 dadams
+;;     icicle-comint-replace-orig-completion-fns:
+;;       Use icicle-comint-dynamic-complete-replacements instead of hard-coded list.
+;;     icicle-comint-dynamic-simple-complete: Fix for Emacs 20: map #'list over completions.
+;; 2008/12/30 dadams
+;;     Removed: shell-hook-fn.
+;;     Removed fset here for: old-comint-dynamic-*, old-shell-dynamic-*, old-bbdb-complete-name.
+;;     icicle-comint-dynamic-simple-complete: Map #'list over candidates (for Emacs 20).
+;;     icicle-comint-hook-fn:
+;;       Don't bind icicle-comint-command here - do it in icicle-bind-other-keymap-keys.
+;; 2008/12 27 dadams
+;;     Removed: icicle-find-file(-other-window)-w-wildcards.
+;;     Removed soft require of dired+.el.
+;;     icicle-find-file(-other-window):
+;;       Use just find-file* with wildcards arg, not *-w-wildcards, as action fn.
+;;       Bind icicle-default-value so that it won't insert the default value.
+;;     icicle-find-file(-other-window), icicle-choose-candidate-of-type:
+;;       Use nil as 3rd read-file-name arg, if not in Dired on a file name.
+;; 2008/12/23 dadams
+;;     icicle-comint-dynamic-complete-as-filename: Bind use-dialog-box to nil.
+;; 2008/12/22 dadams
+;;     icicle-comint-dynamic-complete-as-filename: Use INIT and PRED in read-file-name call.
+;; 2008/12/21 dadams
+;;     Added: icicle-shell-hook-fn, (icicle|old)-comint-dynamic-complete(-filename),
+;;            (icicle|old)-shell-dynamic-complete-(command|filename|environment-variable), 
+;;            icicle-comint-replace-orig-completion-fns, icicle-comint-dynamic-simple-complete,
+;;            icicle-comint-dynamic-complete-as-filename,
+;;            icicle-shell-dynamic-complete-as-(command|environment-variable).
+;;     Renamed: icicle-comint-send-input to icicle-comint-search-send-input,
+;;              icicle-comint-get-final-choice to icicle-comint-search-get-final-choice,
+;;              icicle-comint-get-minibuffer-input to icicle-comint-search-get-minibuffer-input.
+;;     Require shell.el at compile time.
+;;     Use fn, not var, confirm-nonexistent-file-or-buffer.  Thx to Daniel Clemente.
+;; 2008/12/02 dadams
+;;     Removed all use of icicle-file-ignore-space-prefix-flag (removed).
+;; 2008/11/23 dadams
+;;     Updated wrt Emacs 23:
+;;       find-file-confirm-nonexistent-file -> confirm-nonexistent-file-or-buffer.
+;;       icicle-buffer*, icicle-add-buffer-candidate, icicle-choose-candidate-of-type:
+;;         Added confirm-nonexistent-file-or-buffer.
+;; 2008/11/22 dadams
+;;     icicle-command-abbrev, icicle-remove-buffer-config-action, icicle-find-file-absolute*,
+;;       icicle-(recent|locate)-file*, icicle-describe-option-of-type,
+;;       icicle-(vardoc|fundoc|plist|doc), icicle-complete-keys-1, icicle-read-color:
+;;         Put icicle-fancy-candidates property on prompt when appropriate.
+;;     icicle-(find|recent|locate)-file(-absolute)(-other-window):
+;;       Support find-file-confirm-nonexistent-file (Emacs 23).
+;; 2008/11/17 dadams
+;;     Added: icicle-find-first-tag-action, icicle-find-first-tag-other-window-action.
+;;     icicle-find(-first)-tag(-other-window), icicle-find-tag-action: Crosshairs highlighting.
+;;     icicle-find-first-tag(-other-window): Use icicle-find-first-tag(-other-window)-action.
+;;     Mention crosshairs.el in doc strings of commands that use it.
+;; 2008/11/14 dadams
+;;     icicle-locate-file*: Use face icicle-candidate-part only for negative prefix arg.
+;; 2008/11/09 dadams
+;;     icicle-explore: When only 1 candidate, no completion.  Thx to Hannes Janetzek.
+;; 2008/11/04 dadams
+;;     Removed compile-time require of palette.el or eyedropper.el.  Thx to Andrey Zhdanov.
+;;     icicle-read-color: Moved soft require of palette.el or eyedropper.el to beginning.
+;;     Removed: icicle-generic-S-tab.
+;;     icicle-add-key+cmd: Removed test for icicle-generic-S-tab.
+;; 2008/11/03 dadams
+;;     icicle-insert-for-yank: push-mark first.  Thx to Fabrice Knevez.
+;;     Renamed: icicle-insert-kill to icicle-completing-yank,
+;;              icicle-yank-insert to icicle-yank-maybe-completing.
+;;     icicle-search: Restored binding of icicle-searching-p (somehow, accidentally removed it).
+;; 2008/11/02 dadams
+;;     icicle-(doc|vardoc|fundoc|plist):
+;;       Prefix arg uses candidates cache.  Tighten scope of condition-case.
+;;     icicle-doc:
+;;       Show all of fn, var, and face doc that are available.  Thx to Fabrice Knevez.
+;;       Use multi-completion: added symbol name and type.
+;;     icicle-doc-action: (intern (icicle-transform-multi-completion...)), not assoc.
+;; 2008/10/27 dadams
+;;     icicle-find(-first)-tag*: Bind case-fold-search too.
+;; 2008/10/26 dadams
+;;     icicle-(file|directory)-list, icicle-find-file(-absolute)(-other-window),
+;;       icicle-(locate|recent)-file(-other-window): Bind to icicle-file-* options.
+;;     icicle-locate-file*, icicle-recent-file*:
+;;       Bind icicle-abs-file-candidates, icicle-delete-candidate-object.
+;;       Move init code into bindings.
+;;     icicle-find-first-tag*: Move init code into bindings.
+;; 2008/10/24 dadams
+;;     Find-tag fixes.  Thx to Per Nordlow.
+;;       icicle-find-tag: Bind completion-ignore-case also for call to icicle-explore.
+;;       icicle-find-tag-define-candidates-1:
+;;         Look for regexp followed by DEL, through eol.  Move to bol, then next line.
+;;     icicle-explore: Call icicle-get-alist-candidate with NO-ERROR-P arg.
+;; 2008/10/23 dadams
+;;     icicle-find-tag: Use nil for REQUIRE-MATCH in call to icicle-explore.
+;; 2008/10/21 dadams
+;;     icicle-search-read-context-regexp: Bound icicle-candidate-(action|help)-fn to nil.
+;;     icicle-search-define-candidates-1: Added error message - better than generic explore msg.
+;;     Moved enable-recursive-minibuffers from *-search-region to *-search-region-action.
+;;     icicle-search-region-action: Added message if no such file.
+;; 2008/10/18 dadams
+;;     Replaced customize-save-variable by funcall icicle-customize-save-variable-function.
+;;     icicle-bookmark(-other-window): Use icicle-bookmark-cleanup.  Removed completion default.
+;;     Added: icicle-bookmark-cleanup: Select orig-window at end.  Thx to Andrey Zhdanov.
+;; 2008/10/17 dadams
+;;     Added: icicle-bookmark-cmd.
+;; 2008/10/16 dadams
+;;     icicle-bookmark-jump-1: Fixed for Emacs 23.  Thx to Andrey Zhdanov.
+;; 2008/10/12 dadams
+;;     Added: icicle-search-ibuffer-marked, icicle-search-buff-menu-marked.
+;;     icicle-search-dired-marked: Removed unused let binding.
+;; 2008/10/11 dadams
+;;     icicle-Info-index-20: Use symbol at point as default index topic.
+;; 2008/10/05 dadams
+;;     icicle-Info-read-node-name: Use lax completion.  Thx to Richard Kim.
+;; 2008/09/22 dadams
+;;     icicle-dired-project(-other-window):
+;;       Map expand-file-name over absolute file names, to expand ~ in fileset entries.
+;; 2008/09/20 dadams
+;;     icicle-find-file-absolute(-other-window): abs-file-list -> icicle-abs-file-list.
+;; 2008/09/19 dadams
+;;     icicle-add-entry-to-saved-completion-set:
+;;       Use only the fileset name, not the whole fileset, in the (:fileset...) entry.
+;;     icicle-remove-entry-from-saved-completion-set: Rewrote.
+;;       Either the entry to remove or the set to remove it from can now be a fileset.
+;;     icicle-dired-save-marked-persistently: Added FILESETP arg, so you can save in a fileset.
+;;     icicle-dired-project(-other-window): Include filesets as project candidates.
+;;     Renamed: icicle-dired-save-marked-to-cache-file to icicle-dired-save-marked-persistently.
+;;     Moved icicle-kill-a-buffer to icicles-fn.el.
+;; 2008/09/15 dadams
+;;     icicle-(add|remove)-candidate-(to|from)-saved-completion-set: Use :fileset keyword.
+;;     icicle-search-where-arg, icicle-search-where-arg:
+;;       Wrap icicle-(file|buffer)-list with save-selected-window.
+;; 2008/09/14 dadams
+;;     Renamed: icicle-(add|remove)-candidate-(to|from)-saved-completion-set to
+;;              icicle-(add|remove)-entry-(to|from)-saved-completion-set.
+;;     icicle-add-entry-to-saved-completion-set: Treat fileset entries, not just strings.
+;;     icicle-(add|remove)-entry-(to|from)-saved-completion-set,
+;;       icicle-remove-saved-completion-set, icicle-dired-project(-other-window):
+;;         No default value for completing-read.
+;; 2008/09/13 dadams
+;;     Use renamings from icicles-mcmd.el:
+;;       icicle-candidate-set-save-to-cache-file to icicle-candidate-set-save-persistently,
+;;       icicle-candidate-set-retrieve-from-cache-file to *-candidate-set-retrieve-persistent.
+;; 2008/09/11 dadams
+;;     Added: icicle-grep-saved-file-candidates.
+;; 2008/09/09 dadams
+;;     Added: icicle-remove-saved-set-action: No longer set minibuffer-completion-table or call
+;;                                            icicle-complete-again-update.
+;;            icicle-dired-save-marked-(to-(variable|cache-file)|as-project),
+;;            icicle-dired-project(-other-window).
+;;     Renamed: icicle-candidate-set-dired-marked-save(-more) to icicle-dired-save-marked(-more)
+;;     icicle-remove-saved-completion-set:
+;;       Prompt and delete cache file.  Use icicle-remove-saved-set-action as action function.
+;;       Bind: icicle-whole-candidate-as-text-prop-p, icicle-use-candidates-only-once-flag.
+;;       Remove *Completions* window at end.
+;; 2008/09/08 dadams
+;;     icicle-dired-saved-file-candidates(-other-window):
+;;       Don't change to relative file names - use whichever form (abs, rel) is saved.
+;;     icicle-find-tag-define-candidates-1: Make sure tag is not empty before (aref tag 0).
+;;     icicle-find-file-absolute(-other-window):
+;;       Use default-directory as init value and default value.
+;; 2008/09/03 dadams
+;;     icicle-bookmark(-other-window), icicle-goto-marker-1:
+;;       Use crosshairs-unhighlight, not icicle-unhighlight-crosshairs+cleanup.
+;;     icicle-goto-marker-1: Bind orig-buff.
+;;     *-bookmark-jump-1, *-goto-marker-1-action, *-compilation-search-in-context-fn:
+;;       Use crosshairs-highlight, not icicle-highlight-crosshairs.
+;; 2008/09/02 dadams
+;;     Added: icicle-dabbrev--abbrev-at-point.
+;;     icicle-dabbrev-completion: Use icicle-dabbrev--abbrev-at-point.  Thx to Tomer Levin.
+;; 2008/09/01 dadams
+;;     Added: icicle-bookmark-jump(-other-window), icicle-bookmark-jump-1.
+;;     Removed: icicle-bookmark-other-window-action.
+;;     icicle-bookmark(-other-window): Use icicle-bookmark-jump(-other-window) as action fn.
+;;                                     Clean up crosshairs highlighting at end.
+;;     icicle-goto-marker-1:
+;;       Don't bind minibuffer-exit-hook.  Don't require crosshairs.el or hl-line+.el.
+;;       Use icicle-unhighlight-crosshairs+cleanup for the cleanup.
+;;     icicle-compilation-search: Don't require hl-line+.el.
+;;     icicle-compilation-search-in-context-fn: Use icicle-highlight-crosshairs.
+;; 2008/08/31 dadams
+;;     icicle-goto-marker-1-action:
+;;       Use col-highlight-(un)highlight, not crosshairs-flash.  Force redisplay.
+;;       Add col-highlight-unhighlight to pre-command-hook.
+;;       Use hl-line-highlight-now, not hl-line-flash.
+;;     icicle-goto-marker-1: Remove col-highlight-unhighlight from pre-command-hook at end.
+;;     icicle-customize-face(-other-window, icicle-execute-extended-command-1,
+;;       icicle-find-tag-action, icicle-insert-thesaurus-entry, icicle-apply(-list)-action,
+;;       icicle-search-action, icicle-tags-search, icicle-choose-anything-candidate:
+;;         Select window before call select-frame-set-input-focus.
+;; 2008/08/25 dadams
+;;     icicle-find-file-absolute(-other-window), icicle-(recent|locate)-file(-other-window):
+;;       Use lax completion and provide WILDCARDS arg to find-file.
+;; 2008/08/24 dadams
+;;     Use renaming from icicles-fn.el: icicle-minibuffer-contents to icicle-minibuf-input.
+;; 2008/08/23 dadams
+;;     icicle-clear-history: Wrap default value, minibuffer-history-variable, with symbol-name.
+;; 2008/08/21 dadams
+;;     Added: icicle-file(-other-*), icicle-find-file-absolute(-other-*).  Thx to Glauber M4.
+;;     Soft-require bbdb-com.el at compile time.  Don't require bbdb.el at load time - define
+;;       old-bbdb-* only if original is already defined.
+;;     icicle-bbdb-complete-name: Raise error if BBDB not loaded.
+;; 2008/08/20 dadams
+;;     icicle-bbdb-complete-name, icicle-clear-current-history: Replaced ding by icicle-ding.
+;; 2008/08/18 dadams
+;;     icicle-clear-history:
+;;       Moved icicle-use-candidates-only-once-flag binding to icicle-clear-history-1.
+;;     icicle-delete-windows: Bind icicle-inhibit-try-switch-buffer.
+;;     icicle-insert-kill: Bind icicle-sort-function to nil.
+;;     icicle-recent-file(-other-window):
+;;       Bind *-candidate-properties-alist and *-list-use-nth-parts to nil if no prefix arg.
+;;     icicle-goto(-global)-marker:
+;;       Bind icicle-sort-function(s-alist) differently in each - don't bind in *-goto-marker-1.
+;;     icicle-remove-region: Use just icicle-delete-region-from-alist as action function.
+;;     icicle-delete-region-from-alist:
+;;       Use the propertized region name, not just reg-name in the cons to delete.
+;;     Moved icicle-cdr-less-p to icicles-fn.el and renamed to icicle-cdr-lessp.
+;;     Moved icicle-remove-candidate-display-others to icicles-mcmd.el.
+;;     Use renamings from icicles-fn.el: icicle-complete-again-update, icicle-remove-if-not.
+;;     icicle-explore, icicle-find-tag, icicle-complete-keys:
+;;       Renamed local orig-* vars.  Use explore's in *-search-(quit-or-error|cleanup|action).
+;; 2008/08/14 dadams
+;;     icicle-apply: Handle multi-completion alist entries.
+;;     icicle-goto-global-marker: Treat icicle-add-buffer-name-flag: Use multi-completions.
+;;     icicle-marker+text: Added optional arg.  Annotate text with buffer name if appropriate.
+;;     icicle-goto-marker-1: Pass global-ring-p to icicle-marker+text, so it can annotate.
+;; 2008/08/13 dadams
+;;     icicle-goto-marker-1: Don't add marker to ring markers if global ring.
+;;     icicle-goto-marker-1-action: select-frame-set-input-focus.
+;;     icicle-bbdb-complete-name: let -> let* (duh!) for completing-read.
+;; 2008/08/12 dadams
+;;     Added: icicle-goto(-global)-marker-or-(set-mark-command|pop-global-mark),
+;;            icicle-goto-marker-1-action (factored out from icicle-goto-marker-1).
+;;     icicle-goto-marker-1:
+;;       Add mark-marker to list of markers in ring.
+;;       Use icicle-goto-marker-1-action.
+;;       Go directly to marker if only one.  Message if same as point.
+;;       Better test for type of ring, for error msg.
+;;     icicle-apply: Use icicle-explore-final-choice-full in final result (not void var).
+;;                   Added optional arg NOMSG; bind icicle-apply-nomsg.
+;;     icicle-apply-action: Respect icicle-apply-nomsg.  Removed vestigial cruft.
+;;     icicle-bbdb-complete-name: Bind icicle-bbdb-complete-name to t and use strict completion.
+;; 2008/08/11 dadams
+;;     icicle-search-highlight-context-levels: Increase overlay priority for each context level.
+;;     icicle-search-highlight-all-input-matches, icicle-search-highlight-input-matches-here:
+;;       Made of current-input overlay higher than any context-level overlay: 204 -> 220.
+;; 2008/08/10 dadams
+;;     Added: icicle-explore, icicle-find-tag-define-candidates (renamed old to *-1),
+;;            icicle-search-define-candidates (renamed old to *-1), icicle-search-cleanup,
+;;            icicle-(find-tag|search)-(final-act|quit-or-error).
+;;     Renamed: icicle-find-tag-define-candidates to icicle-find-tag-define-candidates-1,
+;;              icicle-search-define-candidates to icicle-search-define-candidates-1.
+;;     Redefined to use icicle-explore: icicle-find-tag, icicle-apply, icicle-search.
+;;     icicle-comint-get-final-choice: Use icicle-explore-final-choice (not icicle-search-*).
+;; 2008/08/08 dadams
+;;     Added: icicle-goto-marker-1 (from icicle-goto-marker):
+;;       Use unwind-protect and minibuffer-exit-hook to unhighlight crosshairs.
+;;       Provide S-delete: bind icicle-delete-candidate-object.
+;;       Require crosshairs.el, hl-line+.el.  Use crosshairs-flash.
+;;     icicle-goto(-global)-marker: Use icicle-goto-marker-1.
+;; 2008/08/06 dadams
+;;     icicle-kmacro(-action):
+;;       Better prefix arg treatment.
+;;       kmacro-end-or-call-macro if still defining.
+;;       No-exit require-match.
+;;       Default value if only one.
+;;       Minor bug fix (extra candidate).
+;;       Name macros just 1, 2..., not macro #1, macro #2...
+;; 2008/08/03 dadams
+;;     Added: icicle-clear(-current)-history(-1|-entry), icicle-apply-list-action.
+;;     icicle-apply: Bind icicle-all-candidates-list-action-fn to icicle-apply-list-action.
+;;     Renamed: icicle-all-candidates-action-fn to icicle-all-candidates-list-action-fn,
+;;              icicle-candidate-alternative-action-fn to icicle-candidate-alt-action-fn.
+;; 2008/07/27 dadams
+;;     icicle-recent-file*, icicle-locate-file*: Added date multi-completion, with prefix arg.
+;;     Added: icicle-make-file+date-candidate.
+;; 2008/07/23 dadams
+;;     Renamed: icicle-map(-action) to icicle-apply(-action).  Added defalias for icicle-map.
+;; 2008/07/21 dadams
+;;     Added: icicle-bbdb-complete-name.  Thx to Ian Swainson.  require of bbdb.el for compile.
+;; 2008/07/19 dadams
+;;     icicle-Info-menu: Corrected regexp to pick up menu-item default, for Emacs 20.
+;; 2008/07/15 dadams
+;;     eval-when-compile require of: anything, cookie1, etags, eyedropper/palette, yow.
+;;     icicle-customize-apropos-options-of-type: Typo: help-remove-duplicates -> icicle-*.
+;;     icicle-send-bug-report: Include emacs-version.
+;; 2008/05/16 dadams
+;;     icicle-find-first-tag*, icicle-find-tag: Use tags-lazy-completion-table for Emacs 23.
+;; 2008/04/25 dadams
+;;     icicle-execute-extended-command-1:
+;;       Add msg about binding if suggest-key-bindings.  Thx to Jonathan Arkell.
+;; 2008/04/14 dadams
+;;     icicle-pp-eval-expression: Treat negative prefix arg.
+;; 2008/04/13 dadams
+;;     icicle-pp-eval-expression:
+;;       Treat prefix arg (added optional arg).
+;;       Respect eval-expression-debug-on-error and icicle-pp-eval-*.
+;; 2008/04/09 dadams
+;;     icicle-apropos-(function|command), icicle-imenu-non-interactive-function-p,
+;;       icicle-complete-keys-help: Use fboundp, not functionp, to also pick up macros.
+;; 2008/04/04 dadams
+;;     icicle-bookmark: Bind completion-ignore-case to bookmark-completion-ignore-case.
+;;     Added: icicle-bookmark-other-window(-action).
+;; 2008/04/01 dadams
+;;     icicle-describe-option-of-type: Bind icicle-apropos-complete-match-fn to nil.
+;;     icicle-describe-opt-of-type-complete:
+;;       Moved icicle-current-completion-mode test out of icicle-delete-if-not (iterates).
+;; 2008/03/31 dadams
+;;     icicle-locate-file(-other-window), icicle-plist, icicle-describe-option-of-type,
+;;       icicle-(var|fun)doc: icicle-highlight-lighter, before gather candidates.
+;;     icicle-plist, icicle-describe-option-of-type, icicle-vardoc, icicle-fundoc:
+;;       Simplified doc string and prompt wrt C-M-j.
+;; 2008/03/30 dadams
+;;     icicle-Info-menu: Treat also pseudo-menu at Top.  Thx to William Xu.
+;; 2008/03/26 dadams
+;;     Added: icicle-Info-menu(-cmd).
+;; 2008/03/22 dadams
+;;     icicle-other-window-or-frame: Rewrote to use icicle-select-window for all frames or one.
+;;     icicle-select-window:
+;;       Rewrote: Similar to icicle-select-frame (unique window names).  All frames or one.
+;;     Added: icicle-select-window-by-name, icicle-make-window-alist.
+;; 2008/03/19 dadams
+;;     Added: icicle-pp-eval-expression (old version in icicles-mcmd.el was renamed).
+;; 2008/03/11 dadams
+;;     icicle-repeat-complex-command: Rewrote doc string.
+;; 2008/03/10 dadams
+;;     icicle-select-frame: Rewrote to use icicle-select-frame-by-name (unique frame names).
+;;     icicle-choose-candidate-of-type: Use icicle-make-frame-alist, not make-frame-alist.
+;;     Added: icicle-select-frame-by-name, icicle-make-frame-alist.
+;; 2008/03/09 dadams
+;;     icicle-dabbrev-completion, icicle-find-tag-define-candidates,
+;;       icicle-Info-build-node-completions, icicle-search, icicle-read-color:
+;;         Call icicle-highlight-lighter.
+;; 2008/03/05 dadams
+;;     icicle-map: Don't inhibit sorting.
+;;     icicle-goto(-global)-marker: Provide sorting choices.  Highlight target line.
+;;     Added: icicle-cdr-less-p.
+;; 2008/02/26 dadams
+;;     Added: icicle-where-is.
+;; 2008/02/23 dadams
+;;     icicle-lisp-complete-symbol:
+;;       Wrap completing-read in save-excursion, because of icicle-top-level-*-completion-flag.
+;;     icicle-search: Use NOWARN arg with find-file-noselect.
+;;     Added: icicle-tags-search.
+;;     Renamed: icicle-search-tag* to icicle-find-tag*,
+;;              icicle-find-tag(-other-window) to icicle-find-first-tag(-other-window).
+;; 2008/02/21 dadams
+;;     icicle-Info-goto-node: Added .. node for book order.
+;;       Use global var icicle-Info-only-rest-of-book-p.  Call icicle-Info-goto-node-1.
+;;     icicle-Info-read-node-name: Remove REST-P arg.
+;;     icicle-Info-goto-node-action: When rest-of-book-p:
+;;       Update node completion table and then completions, and set current candidate number. 
+;;     Added: icicle-Info-goto-node-1, icicle-Info-build-node-completions(-fix-*).
+;; 2008/02/17 dadams
+;;     icicle-Info-goto-node:
+;;       Moved let to interactive spec, and added two args.  Use icicle-Info-read-node-name.
+;;       Negative prefix arg means completions are limited to rest of book.
+;;       Add icicle-Info-book-order-p to icicle-sort-functions-alist.
+;;       New doc string, to explain everything.
+;;     Added: icicle-Info-book-order-p, icicle-Info-read-node-name.
+;; 2008/02/16 dadams
+;;     icicle-(select|remove|search)-region:
+;;       Removed extraneous (setq icicle-candidates-alist) in let binding.
+;; 2008/02/13 dadams
+;;     Added: icicle-search-tag, icicle-search-tag-define-candidates, icicle-search-tag-action,
+;;       icicle-search-tag-help, icicle-pop-tag-mark.
+;;     Updated doc string of icicle-find-tag(-other-window).
+;; 2008/02/08 dadams
+;;     icicle-compilation-search-in-context-fn:
+;;       Simplified and corrected.  Dropped let, with-current-buffer.  Narrow to whole line.
+;;       Different code for Emacs 22+: Set current error; call compilation-next-error-function.
+;;     Removed: icicle-compilation-search-hl-line.
+;;     icicle-compilation-search: Soft require hl-line+.
+;;                                Don't bind next-error-hook to icicle-*-search-hl-line.
+;;     Renamed: icicle-directories-list to icicle-directory-list.
+;; 2008/02/07 dadams
+;;     icicle-search-action:
+;;       Moved icicle-highlight-candidate-* to after icicle-search-in-context-fn call.
+;;     icicle-compilation-search-in-context-fn:
+;;       Use buffer of marker.  Removed code using overlay buffer.
+;;     icicle-compilation-search: Bound icicle-compilation-search-hl-line as next-error-hook.
+;;     Added: icicle-compilation-search-hl-line.
+;; 2008/02/03 dadams
+;;     icicle-file-list: Rewrote using icicle-define-file-command.
+;;     icicle-(re)set-option-*: Added boundp before user-variable-p and icicle-binary-option-p.
+;;     Added: icicle-directories-list.
+;; 2008/01/18 dadams
+;;     Moved icicle-complete-keys-alist to icicles-var.el
+;; 2008/01/13 dadams
+;;     icicle-customize-face(-other-window), icicle-face-list, icicle-read-color:
+;;       Use icicle-transform-multi-completion.
+;;     icicle-(vardoc|fundoc): Use icicle-funvardoc-action as action fn and as help fn.
+;;     icicle-doc: Use icicle-doc-action as action fn and as help fn.
+;;     Added: icicle-funvardoc-action, icicle-doc-action.
+;;     icicle-search-replace-search-hit: Simplified bind/restore of Icicles completion vars.
+;; 2008/01/11 dadams
+;;     icicle-search-highlight-and-maybe-replace:
+;;       Don't call icicle-update-completions or icicle-display-candidates-in-Completions here.
+;;     icicle-search-in-context-default-fn, icicle-compilation-search-in-context-fn:
+;;       Call icicle-update-completions (at the end), since not done in i*-and-maybe-replace.
+;; 2008/01/08 dadams
+;;     icicle-describe-opt-of-type-complete: Treat 3rd arg.  Treat prefix completion.
+;; 2008/01/06 dadams
+;;     icicle-read-color: Provide color help for C-M-.  Added: icicle-color-help.
+;; 2008/01/04 dadams
+;;     icicle-doc, icicle-fundoc, icicle-vardoc: Use history variable icicle-doc-history.
+;; 2008/01/02 dadams
+;;     Added: icicle-search-dired-marked.
+;; 2008/01/01 dadams
+;;     icicle-(buffer|face|file)-list: Reverse list, so C-! keeps order.
+;;     icicle-dired-saved-file-candidates(-other-window):
+;;       Convert candidates to relative file names before opening Dired using them.
+;;       Error if any candidate is not a file in directory.
+;;     Added: icicle-candidate-set-dired-marked-save(-more).
+;; 2007/12/31 dadams
+;;     Added: icicle-fn-doc-minus-sig.
+;;     icicle-fundoc, icicle-doc: Use icicle-fn-doc-minus-sig.
+;;     icicle-doc: Bind icicle-transform-function, not icicle-whole-candidate-as-text-prop-p.
+;; 2007/12/27 dadams
+;;     icicle-describe-option-of-type:
+;;       Bind icicle-apropos-complete-match-fn to nil to prevent automatic input match.
+;; 2007/12/26 dadams
+;;     icicle-describe-opt-of-type-complete: Pretty-print types.  Bind icicle-candidate-help-fn.
+;;     Added: icicle-describe-opt-action.
+;; 2007/12/24 dadams
+;;     icicle-describe-option-of-type:
+;;       Rewrote for different kinds of type matching.  TYPE can be a regexp or type sexp.
+;;         Diff prefix args for diff behaviors. Handle type inheritance and value-checking.
+;;     Added: icicle-describe-opt-of-type-complete.
+;; 2007/12/21 dadams
+;;     icicle-customize-apropos-options-of-type: help-var-is-* -> icicle-var-is-*.
+;; 2007/12/20 dadams
+;;     icicle-dired-saved-file-candidates(-*):
+;;       Use substitute-command-keys in error msg.  Use generate-new-buffer name, not y-or-n-p.
+;; 2007/12/15 dadams
+;;     Added: icicle-customize-apropos-options-of-type.
+;; 2007/12/11 dadams
+;;     icicle-read-color: Don't leave out variable proxies if don't have eyedropper.
+;; 2007/12/07 dadams
+;;     Added: icicle-describe-option-of-type.
+;;     icicle-doc:
+;;       Choose kind of doc, instead of showing all (overwriting).
+;;       Removed binding of icicle-candidate-properties-alist.
+;;     icicle-read-color: Single-quote proxies, don't wrap with `_'.
+;; 2007/12/06 dadams
+;;     icicle-doc: Forgot to include face doc.
+;; 2007/12/03 dadams
+;;     Renamed icicle-longest-common-match to icicle-expanded-common-match.
+;; 2007/12/02 dadams
+;;     icicle-read-color: Include color-valued variables as proxy candidates.
+;; 2007/11/30 dadams
+;;     icicle-command-abbrev:
+;;       Use only membership in icicle-proxy-candidates, not icicle-proxy-candidate property.
+;;       So predicate is just commandp, since proxies are not part of regular candidates.
+;;     icicle-command-abbrev-action:
+;;       Bind to save/restore: icicle-add-proxy-candidates-flag, icicle-proxy-candidates.
+;;     icicle-command-abbrev-command: Bind icicle-add-proxy-candidates-flag to nil, to reset.
+;; 2007/11/29 dadams
+;;     icicle-command-abbrev: Treat icicle-add-proxy-candidates-flag, icicle-proxy-candidates.
+;;     icicle-read-color: Don't test icicle-add-proxy-candidates-flag.
+;; 2007/11/27 dadams
+;;     icicle-command-abbrev: Remove icicle-proxy-candidate property in unwind-protect.
+;; 2007/11/26 dadams
+;;     icicle-get-anything-candidates: Fixed for try-completion and test-completion cases.
+;;     icicle-choose-anything-candidate: Bind icicle-candidates-alist to actions (two places).
+;; 2007/11/25 dadams
+;;     Added: icicle-command-abbrev(-action|-command|-matching-commands|-record|regexp).
+;; 2007/11/24 dadams
+;;     icicle-execute-extended-command: Bind use-file-dialog to nil.
+;; 2007/11/17 dadams
+;;     icicle-read-color:
+;;       Respect icicle-add-proxy-candidates-flag.  Convert proxy multi-completions to strings.
+;; 2007/11/03 dadams
+;;     icicle-generic-S-tab: Doc string - mention icicle-generic-S-tab-keys.
+;; 2007/10/28 dadams
+;;     icicle-search: Don't bind icicle-expand-input-to-common-match-flag.  Updated doc string.
+;;     icicle-search-highlight-all-input-matches:
+;;       Don't set icicle-search-lcm unless icicle-expand-input-to-common-match-flag.
+;;     icicle-search-highlight-and-maybe-replace:
+;;       Match the lcm if icicle-search-replace-common-match-flag is non-nil.
+;;       Save icicle-candidate-nb around icicle-update-completions.
+;;       Set icicle-candidate-nb to 0 if nil.
+;;     icicle-search-highlight-input-matches-here:
+;;       Don't delete icicle-search-refined-overlays if icicle-*-all-current-flag.
+;; 2007/10/26 dadams
+;;     icicle-search-highlight-all-input-matches: Loop through overlays twice, to get the lcm.
+;;     icicle-search-highlight-input-matches-here: Highlight the lcm, if available.
+;;     icicle-search: Bind icicle-search-lcm.
+;; 2007/10/22 dadams
+;;    icicle-read-color: Use special-candidate face for pseudo color candidates.
+;;    icicle-add-key+cmd: Don't include keys bound to undefined.
+;; 2007/10/20 dadams
+;;    icicle-read-color, icicle-remove-color-duplicates:
+;;      Treat pseudo colors too (e.g. *point foreground*).
+;;    icicle-make-color-candidate: Added optional HEX-RGB arg.
+;; 2007/10/16 dadams
+;;     icicle-vardoc: Prefix arg means use only user options.
+;; 2007/10/14 dadams
+;;     Updated doc strings to reflect new icicle-act-before-cycle-flag change.
+;; 2007/10/13 dadams
+;;     icicle-get-anything-candidates:
+;;       If candidates is a fn, return fn that's useful for all-completions.  Filter by input.
+;;     icicle-choose-anything-candidate:
+;;       Don't sort or transform cands.  Respect Anything's require-pattern and delayed
+;;       settings.  Bind icicle-candidates-alist to candidates, if that's a function.
+;;     icicle-get-anything-candidates-of-type: Don't use mapcar if candidates is a function.
+;;     Added: icicle-get-anything-req-pat-chars, icicle-get-anything-input-delay.
+;; 2007/10/06 dadams
+;;     icicle-choose-candidate-of-type: Added entry for file type.
+;; 2007/09/25 dadams
+;;     icicle-doc: Bind icicle-whole-candidate-as-text-prop-p to treat full candidates.
+;; 2007/09/04 dadams
+;;     icicle-read-color: Added optional PROMPT arg.
+;; 2007/08/31 dadams
+;;     icicle-buffer-list: Prefix arg means only buffers visiting files are candidates.
+;;     icicle-search-where-arg, icicle-occur:
+;;       Prefix arg 99 means only buffers visiting files are candidates.
+;;     Added: icicle-search-choose-buffers.
+;; 2007/08/27 dadams
+;;     icicle-search-action: Fixed for return value.  Display the error message.
+;; 2007/08/25 dadams
+;;     icicle-choose-candidate-of-type: Removed (> emacs-major-version 21) restriction.
+;; 2007/08/25 dadams
+;;     Added: a, any, buffer, file, icicle-get-anything-(types|(default-)actions-for-type|
+;;            candidates-of-type|(cached-)candidates), icicle-anything(-candidate-value),
+;;            what-which-how, icicle-choose-anything-candidate.
+;;     Renamed icicle-clear-option to clear-option.
+;;     icicle-object-action: Treat Anything stuff.
+;;       Added optional type arg.  Use vars icicle-object-(named|predicate)-types.
+;;       Move icicle-read-var-value-satisfying call here from icicle-choose-candidate-of-type.
+;;     icicle-choose-candidate-of-type: Create buffer if needed.
+;;     Protected alias definitions with icicle-define-alias-commands-flag.
+;;     icicle-map(-action):
+;;       Use icicle-whole-candidate-as-text-prop-p and new icicle-get-alist-candidate.
+;;     icicle-(select|remove|search)-region, icicle-search:
+;;       Bind/use icicle-whole-candidate-as-text-prop-p.
+;;     icicle-occur: Require buffer names to match existing buffers.  Thx to Hadron Quark.
+;; 2007/08/15 dadams
+;;     Added command toggle as alias for icicle-toggle-option.
+;; 2007/08/09 dadams
+;;     Soft require kmacro.  Define icicle-kmacro* if kmacro gets loaded.
+;; 2007/07/27 dadams
+;;     icicle-search: Renamed icicle-act-first-then-navigate-p to icicle-act-before-cycle-flag.
+;; 2007/07/22 dadams
+;;     icicle-customize-face: Added prefix arg to give vanilla completion.
+;;     Added: icicle-customize-face-other-window.
+;;     Replace standard customize-face(-other-window) by icicle-customize-face(-other-window).
+;;     No longer require icicles-mode.el.
+;;     Require cus-edit.el (not just at compile time).
+;; 2007/07/08 dadams
+;;     Added: icicle-customize-faces.
+;;     icicle-customize-face: Bind icicle-all-candidates-action-fn to icicle-customize-faces.
+;; 2007/06/23 dadams
+;;     icicle-search-read-context-regexp, icicle-search-read-word, icicle-search-property-args,
+;;      icicle-add-region, icicle-save-string-to-variable:
+;;        Use icicle-completing-read-history, not read-from-minibuffer or read-string.
+;;     icicle-face-list: Bound icicle-list-nth-parts-join-string etc.
+;;     Moved to icicles-fn.el: icicle-read-from-minibuf-nil-default.
+;; 2007/06/22 dadams
+;;     Added: icicle-group-regexp, icicle-keyword-list, icicle-search-keywords.
+;; 2007/06/21 dadams
+;;     icicle-plist, icicle-(var|fun)doc, icicle-region-add-buffers, icicle-search-regexp-scan,
+;;      icicle-search-char-property-scan:
+;;        Use face icicle-candidate-part, not icicle-special-candidate.
+;;     icicle-add-key+cmd: Highlight key side of the pair (key  =  binding).
+;; 2007/06/18 dadams
+;;     Added: icicle-customize-face.
+;; 2007/06/17 dadams
+;;     icicle-make-color-candidate: Respect icicle-WYSIWYG-Completions-flag.
+;;     icicle-search-action: Added priority in call to icicle-place-overlay.
+;; 2007/06/12 dadams
+;;     icicle-execute-extended-command(-1):
+;;       i-e-e-c-1 prepares the new last command, but i-e-e-c sets it, at end, to this-command.
+;; 2007/06/10 dadams
+;;     Added: icicle-comint-hook-fn, icicle-compilation-hook-fn.
+;;     Removed unconditional add-hooks for comint-mode-hook and compilation(minor)-mode-hook.
+;; 2007/06/09 dadams
+;;     icicle-set-option-to-t, icicle-reset-option-to-nil, icicle-delete-windows,
+;;      icicle-add-buffer-candidate, icicle-remove-buffer-candidate, icicle-buffer-list,
+;;      icicle-remove-buffer-config, icicle-face-list, icicle-file-list,
+;;      icicle-remove-all-regions-in-buffer, icicle-delete-file:
+;;        Bind icicle-use-candidates-only-once-flag to t.
+;;     icicle-set-option-to-t, icicle-clear-option: Candidate vars must have value nil/non-nil.
+;;     icicle-search-regexp-scan: Added eobp test and empty hit-string test.
+;;     icicle-select-(frame|window), icicle-delete-windows:
+;;       Removed extra t arg to icicle-define-command.
+;; 2007/06/08 dadams
+;;     Added icicle-find-tag(-other-window).
+;; 2007/06/07 dadams
+;;     Renamed: icicle-font-history to icicle-font-name-history,
+;;              icicle-function-history to icicle-function-name-history,
+;;              icicle-variable-history to  icicle-variable-name-history.
+;;     Use standard history variable if bound, else use Icicles history variable:
+;;       bookmark-history, color-history, color-theme-history, face-name-history,
+;;       font-name-history, frame-name-history, function-name-history, variable-name-history
+;; 2007/06/05 dadams
+;;     Don't require hexrgb.el if no window system.
+;;     icicle-read-color: Use featurep, not require, for hexrgb.
+;;     icicle-make-color-candidate: Error if hexrgb is not loaded.
+;; 2007/05/31 dadams
+;;     icicle-execute-extended-command-1: Set, don't bind this-command.
+;;     icicle-execute-extended-command, icicle-execute-named-keyboard-macro:
+;;       Simpler save and restore of last-command.
+;; 2007/05/28 dadams
+;;     icicle-imenu: Use same prefix-arg behavior as icicle-search (search multiple...).
+;;     Added: icicle-imenu-(command|non-interactive-function(-p)).
+;;     icicle-search-highlight-context-levels:
+;;       Wrapped loop in condition-case.  Took max-levels determination out of loop.
+;; 2007/05/25 dadams
+;;     Added: icicle-face-list, icicle-next-single-char-property-change,
+;;            icicle-search-(where-arg|property-args|char-property(-scan)|overlay-property),
+;;            icicle-char-properties-in-buffer(s).
+;;     Removed: icicle-text-properties-in-buffer(s), icicle-search-text-property-scan.
+;;     icicle-search(-word): Use icicle-search-where-arg.
+;; 2007/05/21 dadams
+;;     Added: icicle-search-(buffer|file|all-regions).
+;;     icicle-imenu: Fixed treatment of prefix arg.
+;;     icicle-imenu-command-p: Fix to work also with Emacs 22 and  21.
+;; 2007/05/14 dadams
+;;     icicle-execute-extended-command-1: Error if empty command name.
+;; 2007/05/12 dadams
+;;     icicle-imenu: Added prefix arg for search for commands and non-cmds in Emacs-Lisp mode.
+;;     Added: icicle-imenu-command-p.
+;; 2007/05/11 dadams
+;;     icicle-search-define-candidates:
+;;       Move scan-fn-or-regexp to 4th arg from 2nd.  Removed &optional.
+;;       Apply icicle-search-regexp-scan to args also.
+;;     icicle-search-regexp-scan: Treat predicate.
+;;       Move regexp to 3rd arg from 2nd, and add predicate arg.  Removed &optional.
+;;     icicle-search-regexp-scan, icicle-search-text-property-scan:
+;;       Add lengths of temp-list and icicle-candidates-alist.
+;;     icicle-search-text-property(-scan): Added predicate argument.
+;;     icicle-search-region-action: Bind icicle-candidate-action-fn to icicle-search-action.
+;;     icicle-(select|search|remove)-region: Removed temp var bound to (icicle-region-sorted).
+;;     icicle-search: Mention predicate in no-match message.
+;; 2007/05/07 dadams
+;;     icicle-add-buffer-config: Added history args for icicle-read-from-minibuf-nil-default.
+;; 2007/05/06 dadams
+;;     icicle-search: Bind icicle-must-pass-predicate to icicle-search-context-match-predicate.
+;;     icicle-search-read-context-regexp: Don't accept an empty regexp.
+;;     Changed S-C- to C-S- and M-C- to C-M- in doc.
+;; 2007/05/04 dadams
+;;     icicle-(re)set-option-to-(nil|t), icicle-toggle-option: Enable recursive minibuffers.
+;; 2007/05/02 dadams
+;;     icicle-search-read-word: Updated doc string.
+;;     icicle-search: Respect icicle-search-whole-word-flag and icicle-regexp-quote-flag.
+;;                    Single message for non-existent buffers.
+;;     icicle-select-region-action: Message for non-existent file.
+;;     Added empty defvars for Emacs 22 standard vars, to quiet byte compiler.
+;; 2007/05/01 dadams
+;;     icicle-execute-extended-command-1:
+;;       Don't bind icicle-candidate-action-fn if we have already read command name.
+;;     icicle-search-*-scan: Fill, reverse temp list, then append to icicle-candidates-alist.
+;;     Added: icicle-search-word, icicle-search-read-word.
+;; 2007/04/29 dadams
+;;     icicle-search, icicle-search-text-property, icicle-text-properties-in-buffers:
+;;       Allow search of multiple files.  Change prefix arg accordingly.
+;; 2007/04/28 dadams
+;;     Added: icicle-compilation-search-in-context-fn, icicle-search-in-context-default-fn,
+;;            icicle-search-highlight-and-maybe-replace.
+;;     icicle-search-action: Move code to the new functions.  Use icicle-search-in-context-fn.
+;;     icicle-compilation-search: Rewrote.
+;;       No longer use compile-goto-error as icicle-search-hook.
+;;       Use icicle-compilation-search-in-context-fn.
+;;       Cannot-replace error msg if not Emacs 22, since no compilation-highlight-overlay.
+;;       Provide .* regexp and do not highlight - as in icicle-occur.
+;; 2007/04/22 dadams
+;;     icicle-search: Allow for pre-bound icicle-candidate(-alternative)-action-fn.
+;;     icicle-search-replace-search-hit:
+;;       Call icicle-candidate-action-fn, not necessarily icicle-search-action.
+;; 2007/04/20 dadams
+;;     Added: icicle-search-highlight-context-levels.  Use in icicle-search-action.
+;;     icicle-search-highlight-cleanup: Delete icicle-search-level-overlays.
+;;     icicle-search: Set icicle-search-context-regexp nil if scan-fn-or-regexp is not string.
+;;     icicle-search-replace-fixed-case-p: Return nil if arg is nil.
+;;     icicle-search-read-context-regexp: Use default with read-number; protect with fboundp.
+;;     Added soft require of strings.el.
+;; 2007/04/18 dadams
+;;     Added: icicle-search-replace-fixed-case-p.  Use in icicle-search-action.
+;;     icicle-search-action:
+;;       Set match data to region when icicle-search-replace-whole-candidate-flag is t.
+;;       Don't search for icicle-search-context-regexp.
+;;     icicle-search-replace-match: Added fixedcase arg.
+;;                                  Use icicle-search-replace-literally-flag.
+;;     Use replace-match-maybe-edit (Emacs 22), not replace-match, and save and restore stuff.
+;;     icicle-search-replace-search-hit:
+;;       Use regexp-history in read-string.  Use icicle-search-define-replacement.
+;; 2007/04/17 dadams
+;;     Added: icicle-search-replace-match.  Treat Emacs<22 also.  Use in icicle-search-action.
+;;     icicle-search-replace-search-hit: Use regexp-history in read-string.
+;; 2007/04/16 dadams
+;;     icicle-search-action: Use replace-count.
+;;     icicle-search: Initialize replace-count to 0.
+;; 2007/04/15 dadams
+;;     icicle-search-action: Allow \,... etc. replacement.
+;;       Use query-replace-compile-replacement and replace-match, with error treatment.
+;;       Removed unwind-protect.  Removed %s from error-msg return.
+;;     icicle-search: Save search string as icicle-search-context-regexp.
+;;                    Use "%s" for error message in failure error call.
+;;                    Updated doc string for lisp-eval replacement etc.
+;;     *(-all)-input-matches(-here): save-match-data around input matching.
+;;     icicle-search-highlight-input-matches-here: Added not eobp to loop test.
+;; 2007/04/13 dadams
+;;     icicle-search-highlight-input-matches-here: Bound free var ov.
+;; 2007/04/10 dadams
+;;     icicle-search-regexp-scan:
+;;       Use match indicated by icicle-search-context-level as context.
+;;     Added: icicle-search-read-context-regexp.
+;;     icicle-search(-region|-regexp-scan): Use icicle-search-read-context-regexp.
+;; 2007/04/08 dadams
+;;     icicle-map-action, icicle-search-action:
+;;       Return nil for success, error msg for failure (it was reversed).
+;;       Use icicle-highlight-candidate-in-Completions.
+;;     icicle-map-action: Moved minibuffer frame selection to unwind-protect final clause.
+;;     icicle-search: Give focus to original frame, in unwinding clause (C-g).
+;;     Added: icicle-search-highlight-input-matches-here.
+;;     icicle-search-highlight-all-input-matches: Highlight all input matches in candidate.
+;;     icicle-search-replace-search-hit:
+;;       Use 0 if icicle-candidate-nb is nil.  Display completions.
+;;       Save and restore: icicle-last-completion-command, icicle-last-input.
+;;       Prevent using same string as candidate for replacement.
+;;     icicle-search-action: Rewrote.  Enable repeated replacment of input matches.
+;;       Save and restore icicle-candidate-nb.  Wrap it around if at end.
+;;       Warn about empty input for whole-candidate replacement.
+;;       Update icicle-last-completion-candidate.  Display completions.
+;; 2007/04/07 dadams
+;;     icicle-search: Added query-replace functionality.
+;;       Navigate first, then act (C-next).
+;;       Give focus to last frame searched.
+;;       Bind: icicle-candidate-alternative-action-fn, icicle-inhibit-sort-p,
+;;             icicle-searching-p, icicle-expand-input-to-common-match-flag.
+;;       Bind icicle-buffer-require-match-flag to partial-match-ok in interactive spec.
+;;     icicle-search-action:
+;;       Added optional replace arg: if non-nil, then fn becomes a replace action.
+;;     Added: icicle-search-replace-search-hit, icicle-search-replace-candidate,
+;;     icicle-buffer-list: Bind all the stuff that is bound in icicle-buffer.
+;; 2007/04/06 dadams
+;;     icicle-execute-extended-command-1:
+;;       Bind this-command, but only around call to cmd - don't set it.
+;; 2007/04/02 dadams
+;;     Added: icicle-search-text-property, icicle-search-text-property-scan,
+;;            icicle-text-properties-in-buffer(s).
+;;     icicle-search:
+;;       Added &rest args.  Updated doc string.  Don't read regexp or reverse alist here.
+;;       Use icicle-search-define-candidates, not icicle-search-regexp-scan.
+;;     icicle-search-regexp-scan: Read regexp here.  Reverse alist here.
+;;     Moved to icicles-fn.el: icicle-filter-alist, icicle-first-matching-candidate.
+;;     Renamed: icicle-search-region-beg-end to icicle-region-or-buffer-limits.
+;; 2007/04/01 dadams
+;;     icicle-repeat-complex-command:
+;;       Remove duplicates and sort entries, but only for reading command to eval.
+;; 2007/03/31 dadams
+;;     icicle-lisp-complete-symbol: Bind icicle-top-level-when-sole-completion-flag to t.
+;; 2007/03/27 dadams
+;;     icicle-search: Hard-code C-next key in message.
+;;     icicle-search-regexp-scan: Initialize last-beg for first time.
+;; 2007/03/23 dadams
+;;     icicle-execute-extended-command-1:
+;;       Don't restore last-command.  Run (pre|post)-command-hook.  Set, don't bind,
+;;       this-command.  enable-recursive-minibuffers for interactive call of cmd.
+;;     icicle-execute-extended-command, icicle-execute-named-keyboard-macro:
+;;       Restore last-command at end.
+;; 2007/03/20 dadams
+;;     icicle-execute-extended-command-1: When wrong-number-of-args, icicle-help-on-candidate.
+;; 2007/03/14 dadams
+;;     icicle-dired-saved-file-candidates, icicle-buffer, icicle-(find|locate|recent)-file:
+;;       Put 200 as value of property icicle-Completions-window-max-height.
+;;     Added ;;;###autoload for icicle-define*.
+;; 2007/03/09 dadams
+;;     icicle-search, icicle-map, icicle-(remove|search|select)-region, icicle-imenu,
+;;     icicle-occur, icicle-compilation-search:
+;;       Bound icicle-transform-function to nil if interactive-p.
+;;     icicle-comint-search: Updated doc string to mention false positives in command matching.
+;;     Removed eval-when-compile from requires of Icicles libraries (except icicle-mac.el).
+;; 2007/03/08 dadams
+;;     icicle-insert-kill: Bound icicle-delete-candidate-object.
+;; 2007/03/07 dadams
+;;     icicle-delete-windows, icicle-map-action, icicle-search-action,
+;;     icicle-choose-candidate-of-type, icicle-complete-keys-help:
+;;       Use 0, not t, as frame arg to get-buffer-window.
+;; 2007/03/06 dadams
+;;     icicle-search, icicle-map, icicle-(remove|search|select)-region:
+;;       Bind icicle-inhibit-sort-p to non-nil to prevent user sorting.
+;;       Update doc string to mention that you cannot sort candidates.
+;;     icicle-(remove|search|select)-region: Sort candidates by buffer and then by tag.
+;;     icicle-search-region: Bound icicle-delete-candidate-object.
+;;     icicle-search, icicle-map: Don't add or subtract one from candidate # if use action fn.
+;;     icicle-search:
+;;       If require-match, set icicle-completion-candidates and marker to reflect final choice.
+;;     Renamed: icicle-get-current-candidate to icicle-get-alist-candidate.
+;;     Added: icicle-region-sorted, icicle-region-add-buffers.
+;; 2007/03/04 dadams
+;;     icicle-get-current-candidate: Return nil if icicle-candidates-alist is nil.
+;; 2007/03/02 dadams
+;;     icicle-remove-buffer-config, icicle-remove-buffer-candidate: Removed extraneous quote.
+;;     icicle-(find|recent)-file(-other-window): Bound icicle-delete-candidate-object.
+;; 2007/02/28 dadams
+;;     icicle-buffer-list, icicle-color-theme: Bound icicle-delete-candidate-object.
+;; 2007/02/27 dadams
+;;     icicle-recent-file(-other-window): Changed INITIAL-INPUT completing-read arg to nil.
+;; 2007/02/25 dadams
+;;     Added: icicle-remove-buffer-candidate-action, icicle-remove-buffer-config-action.
+;;     icicle-add-buffer-candidate, icicle-bookmark, icicle-buffer-config:
+;;       Bound icicle-delete-candidate-object.
+;; 2007/02/24 dadams
+;;     Added: icicle-kill-a-buffer-and-update-completions (was kill-a-buffer),
+;;            icicle-delete-region-from-alist.
+;;     icicle-delete-window: Use icicle-kill-a-buffer...-completions, not icicle-kill-a-buffer.
+;;     icicle-buffer(-other-window), icicle-choose-candidate-of-type:
+;;       Bind icicle-delete-candidate-object to icicle-kill-a-buffer.
+;;       Bind icicle-sort-function to self if icicle-buffer-sort-function is nil.
+;;     icicle-select-region:
+;;       Bind icicle-delete-candidate-object to icicle-delete-region-from-alist.
+;;     icicle-remove-region: Rewrote.
+;;       Use icicle-delete-region-from-alist.
+;;       Use icicle-remove-candidate-display-others, but don't redisplay unless completing.
+;;       Respect icicle-add-buffer-name-flag (append buffer names).
+;; 2007/02/20 dadams
+;;     Added: icicle-search-region-action.  Open file associated with candidate.
+;;     icicle-search-region:
+;;       Use icicle-search-region-action.  Updated doc string.  Bind icicle-list-*.
+;;       Fix default completing-read value.  Respect icicle-add-buffer-name-flag.
+;;     icicle-select-region-action: Open file associated with candidate.
+;;     icicle-region-open-all-files: Ignore files that are not readable.
+;;     icicle-regions: Remove only non-existent buffers that are not associated with files.
+;; 2007/02/19 dadams
+;;     Added: icicle-region-open-all-files.
+;;     icicle-(search|select)-region, icicle-search: Use icicle-region-open-all-files.
+;;     icicle-add-region: Add file name to region entry in alist.
+;;     icicle-select-region-action, icicle-region-help, icicle-search:
+;;       Updated selectors for point and mark, because of addition of file name.
+;;     icicle-region-help: Add file name to help message.
+;; 2007/02/18 dadams
+;;     Added: icicle-first-matching-candidate.
+;;     icicle-get-current-candidate: Use icicle-first-matching-candidate, not assoc.
+;; 2007/02/07 dadams
+;;     icicle-search-action: Make *Completions* window dedicated.  Thx to Peter Povinec.
+;; 2007/02/07 dadams
+;;     icicle-search: pop-to-buffer and raise frame. Don't select orig-window.
+;; 2007/02/06 dadams
+;;     icicle-search, icicle-select-region, icicle-search-regexp-scan:
+;;       Respect icicle-add-buffer-name-flag.
+;;     icicle-search: Bound icicle-show-Completions-initially-flag to t.
+;;                    Bound icicle-candidate-help-fn to icicle-search-help.
+;;     icicle-search-regexp-scan: nil BUFFER arg means current buffer now.
+;;     icicle-search-action, icicle-filter-alist: Treat multi-completion case also.
+;;     Added: icicle-search-help.
+;;     icicle-map-action, icicle-search-action: Removed unused local var, curr-cand-string.
+;;     icicle-select-region, icicle-remove-region, icicle-search-region:
+;;       Use icicle-candidates-alist, not regions-w-buffers (but bind it locally too).
+;;     Renamed: icicle-get-current-region-candidate to icicle-get-current-candidate.
+;;     icicle-region-help: Provide region limits also.
+;;     Added note to some doc strings that the command is for Icicle mode only.
+;; 2007/02/02 dadams
+;;     icicle-search: Test for buffers, not buffer names, in WHERE.  Thx to Peter Povinec.
+;;     icicle-buffer-list: Return the list of buffers.
+;; 2007/01/28 dadams
+;;     icicle-complete-keys:
+;;       Bind icicle-sort-functions-alist, using icicle-command-names-alphabetic-p.
+;; 2007/01/22 dadams
+;;     icicle-read-color:
+;;       Removed free var NTH-PARTS.
+;;       Bound icicle-list-nth-parts-join-string the same as icicle-list-join-string.
+;;       Remove duplicates: AliceBlue and alice blue etc.: downcase and remove whitespace.
+;;     Added: icicle-remove-color-duplicates.
+;;     Added soft require of hexrgb.el.
+;;     icicle-*doc, icicle-plist: Bound icicle-candidate-properties-alist.
+;; 2007/01/21 dadams
+;;     Added: icicle-read-color, icicle-make-color-candidate.
+;; 2007/01/18 dadams
+;;     Added: icicle-get-current-region-candidate.
+;;       Use current cand if cycled or `mouse-2'.  Else if single match, use that.  Else error.
+;;     icicle-remove-region, icicle-search-region, icicle-region-help:
+;;       Use icicle-get-current-region-candidate.
+;;     icicle-add-region: Added optional TAG arg and prefix arg treatment.
+;;     icicle-remove-region: Update completions list.  Bind regions-w-buffers.
+;;     icicle-remove-all-regions-in-buffer: Use current buffer name as default.
+;;     Added: icicle-select-region-action.
+;;     icicle-select-region: Use icicle-select-region-action.
+;;     Renamed: option icicle-regions to icicle-region-alist.
+;;     icicle-regions: Sort entries.
+;; 2007/01/17 dadams
+;;    icicle-filter-alist: Reversed arg order.  Return alist arg if filter-keys arg is empty.
+;; 2007/01/12 dadams
+;;    icicle-delete-window: Do icicle-remove-Completions-window if in minibuffer.
+;;    icicle-yank-insert: Do icicle-yank if in minibuffer.
+;;    icicle-(fundoc|vardoc|doc|plist): Added condition-case: protect symbols that error.
+;; 2007/01/01 dadams
+;;    Added: icicle-(add|remove)-candidate-(to|from)-saved-completion-set.
+;;    icicle-add-buffer-config: Use nil, not "nil" as default, if icicle-buffer-sort is nil.
+;;                              Use icicle-define-add-to-alist-command to define it.
+;;    icicle-remove-buffer-config, icicle-remove-saved-completion-set:
+;;      Use icicle-assoc-delete-all, not delete of assoc.
+;;    icicle-remove-saved-completion-set: Update display after removal.
+;;    Reformatted icicle-define(-file)-command, based on setup.el's lisp-indentation-hack.
+;; 2006/12/25 dadams
+;;    Bug fix: icicle-search-action: Use icicle-filter-alist on icicle-candidates-alist.
+;;    icicle-(select|search)-region: Use pop-to-buffer and raise-frame, not set-buffer.
+;;    icicle-select-region: Activate the region.
+;; 2006/12/23 dadams
+;;    Added: icicle-region-help.  Use in icicle-*-region.
+;;    Added: icicle-remove-all-regions-in-buffer, icicle-remove-all-regions-action.
+;;    icicle-(select|search)-region: Ignore regions in non-existent buffers.
+;;    icicle-remove-region: Update the persistent value of icicle-regions.
+;; 2006/12/22 dadams
+;;    Added: icicle-exchange-point-and-mark.
+;;    icicle-customize-icicles-group: icicles -> Icicles (group name).
+;; 2006/12/18 dadams
+;;    icicle-object-action: Remove print arg.  icicle-apply-to-* uses current-prefix-arg now.
+;; 2006/12/17 dadams
+;;    Added: icicle-object-action, icicle-choose-candidate-of-type,
+;;           icicle-read-var-value-satisfying.
+;; 2006/12/16 dadams
+;;    icicle-map-action: Bug fix: Use icicle-candidate-nb, not assoc.
+;;    Added: icicle-goto(-global)-marker, icicle-marker+text, icicle-markers.
+;; 2006/12/10 dadams
+;;    Moved minibuffer and *Completions* commands to new file, icicles-mcmd.el.
+;;    Require icicles-opt.el.
+;;    icicle-buffer-list: Added final message.
+;; 2006/11/26 dadams
+;;    icicle-search-action: Bug fix: Use icicle-candidate-nb, not assoc, to get cand+mrker.
+;;    icicle-*-complete-1: Bug fix: Don't set icicle-current-input to icicle-last-input if nil.
+;;    Renamed: icicle-search-region to icicle-search-region-beg-end.
+;;    Added: icicle-(add|remove|select|search)-region.
+;;    icicle-search: Use icicle-regions for numeric prefix arg.  Updated doc string.
+;;    Added: icicle-Info-index-20 - thx to Tamas Patrovics.  Use it in icicle-Info-index.
+;; 2006/11/25 dadams
+;;    icicle-search: After final selection, select orig-window and give its frame input focus.
+;; 2006/11/24 dadams
+;;    Added: icicle-ensure-overriding-map-is-bound, icicle-universal-argument,
+;;           icicle-universal-argument-more, icicle-negative-argument, icicle-digit-argument,
+;;           icicle-universal-argument-other-key, icicle-universal-argument-minus,
+;;           icicle-kmacro(-action).
+;;    icicle-dabbrev-completion: Don't stop at common root, and use lax completion.
+;;    Replaced icicle-select-window-or-frame by icicle-other-window-or-frame (respects C-u 0).
+;; 2006/11/23 dadams
+;;    icicle-prefix-complete-1: Respect icicle-TAB-shows-candidates-flag.
+;;    icicle-execute-extended-command-1: Treat named keyboard macros too.
+;;    Added: icicle-execute-named-keyboard-macro.
+;; 2006/11/18 dadams
+;;    icicle-add/update-saved-completion-set, icicle-apropos*, icicle-bookmark,
+;;    icicle-buffer-config, icicle-candidate-set-retrieve, icicle-candidate-set-save,
+;;    icicle-color-theme, icicle-comint-command, icicle-complete-thesaurus-entry,
+;;    icicle-customize-apropos*, icicle-delete-windows, icicle-font, icicle-frame-bg,
+;;    icicle-frame-fg, icicle-insert-kill, icicle-insert-string-from-variable,
+;;    icicle-insert-thesaurus-entry, icicle-locate-file*, icicle-map, icicle-narrow-candidates,
+;;    icicle-remove-buffer-config, icicle-remove-saved-completion-set,
+;;    icicle-reset-option-to-nil, icicle-save-string-to-variable, icicle-search,
+;;    icicle-select-window, icicle-set-option-to-t, icicle-toggle-option:
+;;      Use a specific history variable.
+;; 2006/11/17 dadams
+;;    Added: icicle-select-(frame|window), icicle-select-window-or-frame.
+;; 2006/11/10 dadams
+;;    icicle-mouse-candidate-action: read-event to swallow mouse up event.
+;;    icicle-map-action:
+;;      Don't use icicle-filter-alist - find string in icicle-candidates-alist.
+;;      Unwind-protect to reselect minibuffer frame.  Don't bind case-fold-search.
+;;    icicle-map: enable-recursive-minibuffers.
+;; 2006/11/09 dadams
+;;    icicle-nb-of-candidate-in-Completions: Redefined using binary search, for performance.
+;;    icicle-toggle-ignored-space-prefix: Update doc string to use icicle-dispatch-C-^.
+;;    icicle-search:
+;;      Bind icicle-update-input-hook unconditionally, after icicle-search-regexp-scan.
+;;    icicle-search-regexp-scan: Highlight up to icicle-search-highlight-threshold.
+;;    icicle-search-highlight-all-input-matches:
+;;      Only update input and highlight if icicle-search-highlight-all-current-flag.
+;;    icicle-search-action:
+;;      Don't use icicle-filter-alist - find string in icicle-candidates-alist.
+;;    icicle-search-highlight-cleanup: Bind inhibit-quit to t.
+;; 2006/11/07 dadams
+;;    Added: icicle-toggle-highlight-all-current.
+;; 2006/11/06 dadams
+;;    icicle-search-action:
+;;      Highlight icicle-current-input, not icicle-current-raw-input (not updated).
+;;    Renamed icicle-search-highlight-all-flag to icicle-search-highlight-threshold.
+;; 2006/11/05 dadams
+;;    Added: icicle-search-regexp-scan.
+;;    icicle-search:
+;;      Added buffers arg.  Updated doc string.
+;;      Use icicle-search-regexp-scan:  Scan each buffer in buffers.
+;;                                      Add marker, not position, to icicle-candidates-alist.
+;;      Go to candidate in its buffer.
+;;      Added progress message.
+;;    icicle-search-action: Pop to buffer of candidate (marker) and raise frame.
+;;    icicle-occur:
+;;      Added buffers arg.  Updated doc string.  Call icicle-search-highlight-cleanup.
+;;    icicle-search-highlight-all-input-matches: set-buffer for each ov in dolist (minor opt.).
+;;    icicle-search-highlight-cleanup: Added progress messages.  Minor optimization.
+;; 2006/10/22 dadams
+;;    icicle-complete-keys-action:
+;;      Set last-nonmenu-event to non-mouse info, to ignore *Completions* click.
+;;    icicle-complete-keys-1: Don't use a default value for completing-read.
+;; 2006/10/21 dadams
+;;    Added: icicle-insert-char.
+;;    icicle-add-key+cmd: Respect icicle-complete-keys-self-insert-flag.
+;; 2006/10/20 dadams
+;;    icicle-map, icicle-delete-window: Corrected doc string.
+;; 2006/10/16 dadams
+;;    icicle-add-key+cmd: Protect :enable's eval with condition-case.
+;;    icicle-complete-keys-1:
+;;      No longer use icicle-extra-candidates.
+;;      Use default value of .. for completing-read (except at top level).
+;;    icicle-complete-keys-action: Correct no-match case: must match whole and part.
+;;    icicle-keys+cmds-w-prefix: Add .. to icicle-complete-keys-alist unless at top level.
+;; 2006/10/15 dadams
+;;    icicle-complete-keys:
+;;      Bind icicle-complete-keys-action, not icicle-complete-keys-help, to icicle-*-action-fn.
+;;      Bind orig-buff, orig-window, and icicle-completing-keys-p, for use elsewhere.
+;;    Added: icicle-complete-keys-action using code from icicle-complete-keys.
+;;    icicle-complete-keys-action:
+;;      Use orig-buff and orig-window; restore to originally selected window.
+;;      Error if candidate doesn't match template xxx  =  yyy.
+;;    icicle-complete-keys-1:
+;;      Call icicle-complete-keys-action on chosen candidate.
+;;    icicle-help-on-candidate: Treat key completion also.
+;;    Added from cus-edit+.el: custom-variable-p.
+;;    Moved to icicles-mode.el: icicle-select-minibuffer-contents, next-history-element.
+;;    Moved here from icicles-mode.el: icicle-generic-S-tab.
+;;    icicle-generic-S-tab (bug fix): Do not set last-command to icicle-apropos-complete.
+;;    Added: eval-when-compile's.
+;; 2006/10/13 dadams
+;;    icicle-add-key+cmd:
+;;      Add actual key to icicle-complete-keys-alist.  Thx to Stefan Monnier.
+;;      Don't filter out index (Imenu) keymap.
+;;      Treat :enable condition.
+;;    icicle-complete-keys-1:
+;;      Use actual key recorded in icicle-*-keys-alist. Don't convert to key description.
+;;      Treat digit-argument and negative-argument.
+;;    icicle-complete-keys-alist: Updated doc string for new structure.
+;; 2006/10/08 dadams
+;;    Added: icicle-add-key+cmd, icicle-read-single-key-description.
+;;    Added: icicle-complete-keys-alist.
+;;           Use in icicle-complete-keys-1, icicle-keys+cmds-w-prefix, icicle-add-key+cmd.
+;;    icicle-add-key+cmd: Update binding, depending on its type (menu item etc.).
+;;      Push (cons candidate binding), not just candidate, onto icicle-complete-keys-alist.
+;;    icicle-complete-keys-1:
+;;      Use binding, not just command name.  Call it and put it in (this|last)-command.
+;;      Flipped (corrected) use of icicle-key-descriptions-use-<>-flag.
+;;      Use icicle-read-single-key-description.
+;;    icicle-prefix-keys-first-p, icicle-complete-keys-1, icicle-complete-keys-help,
+;;      icicle-keys+cmds-w-prefix: Don't use icicle-list-*-string.
+;; 2006/10/05 dadams
+;;    icicle-complete-keys-1: Remove icicle-special-candidate property from all candidates.
+;;    icicle-keys+cmds-w-prefix:
+;;      Intern candidate and, if local binding, put icicle-special-candidate property on it.
+;;      Use single string for candidate (don't use multi-completion).
+;; 2006/10/03 dadams
+;;     icicle-complete-keys-1: Treat "..".
+;;     icicle-complete-keys: Updated doc string accordingly.
+;;     icicle-prefix-keys-first-p: ".." is less than all other strings.  Don't hard-code "= ".
+;;     icicle-keys+cmds-w-prefix:
+;;       Filtered out shadowed bindings, icicle-generic-S-tab, and icicle-complete-keys.
+;;       Use only map-keymap & lookup-key, not accessible-keymaps, current-active-maps,
+;;         map-keymap.
+;; 2006/10/01 dadams
+;;     icicle-complete-keys: Bind sort functions, to put prefix keys first, by default.
+;;                           Set last-command, before recursing.
+;;     Replaced icicle-alternative-sort with icicle-toggle-alternative-sorting (new).
+;;     icicle-(apropos|prefix)-complete-1:
+;;       Ensure icicle-(current|last)-input are strings, before compare.
+;;     icicle-keys+cmds-w-prefix: Tolerate empty local and global maps.
+;; 2006/09/30 dadams
+;;     Added: icicle-read-kbd-macro, icicle-edmacro-parse-keys, icicle-toggle-angle-brackets.
+;;     icicle-complete-keys-1, icicle-dabbrev-completion:
+;;       key-description -> icicle-key-description, with icicle-key-descriptions-use-<>-flag.
+;;     icicle-complete-keys-1:
+;;       read-kbd-macro -> icicle-read-kbd-macro, with icicle-key-descriptions-use-<>-flag.
+;;       Got rid of extra space in prompt before colon, when no prefix.
+;;     icicle-keys+cmds-w-prefix: Use single-key-description with icicle-*-use-<>-flag.
+;;     icicle-insert-key-description:
+;;       Change arg to a toggle, and use icicle-key-descriptions-use-<>-flag.
+;;     Bind icicle-candidate-set-(retrieve|save) to C-M-<, C-M->, not C-<, C->.
+;;     icicle-dired-saved-file-candidates*:
+;;       Changed doc strings and messages to use dynamic binding of icicle-candidate-set-save.
+;; 2006/09/24 dadams
+;;     Added: icicle-complete-keys-help.
+;;     icicle-complete-keys:
+;;       Bind icicle-*-action-fn to icicle-complete-keys-help.  Mention help keys in docstring.
+;;     icicle-complete-keys-1:
+;;       Set last-command to command, so completion doesn't think candidate was last-command.
+;;     icicle-keys+cmds-w-prefix: Provide placeholder for future use of generic characters.
+;; 2006/09/23 dadams
+;;     icicle-complete-keys-1:
+;;       Error if there are no keys for the prefix.
+;;       Error, not self-insert-command, for key read-kbd-macro can't convert. condition-case.
+;;       Report error if calling cmd fails.
+;;       Use vconcat for recursive call.
+;;       Read cmd, don't intern it - it might be a lambda or byte-compiled function.
+;;       Remove duplicates.
+;;       Provide KEYS arg to call-interactively, for error reporting.
+;;       Don't bind icicle-must-not-match-regexp to "^Character set .*=  self-insert-command".
+;;     icicle-keys+cmds-w-prefix:
+;;       Treat also local keymap and current minor maps.
+;;       Do nothing if keys+maps is nil.
+;;       Only map-keymap if the target is a keymap.
+;;       Use keymapp, not functionp, as the binding test.
+;;       Only add binding if it is a command or keymap.
+;;       Only add self-insert-command binding if the key is char-valid-p.
+;;       Use format %S, not %s for a command binding.
+;;     icicle-insert-key-description: Added no-angle-brackets-p arg.
+;; 2006/09/22 dadams
+;;     icicle-complete-keys-1:
+;;       Filter out keys described "Character set ...= self-insert-command".
+;; 2006/09/20 dadams
+;;     icicle-complete-keys-1: Treat self-insert-command specially.
+;; 2006/09/17 dadams
+;;     Added: icicle-complete-keys(-1), icicle-*-keys-prefix, icicle-keys+cmds-w-prefix,
+;;     icicle-doc: Removed one \n from each candidate.
+;; 2006/09/12 dadams
+;;     Renamed icicle-switch-to-minibuffer to icicle-insert-completion.
+;;     Added: icicle-switch-to/from-minibuffer.
+;;     icicle-completion-help: Keep focus in the minibuffer after displaying help.
+;; 2006/09/02 dadams
+;;     icicle-help-on-(next|previous)-(apropos|prefix)-candidate,
+;;       icicle-(next|previous)-(apropos|prefix)-candidate-action:
+;;       Use save-selected-window, not save-window-excursion.
+;;     icicle-find-file*: In Dired, ignore errors picking up current-line's file name.
+;;     icicle-mouse-choose-completion: Error if minibuffer is not active.
+;; 2006/08/27 dadams
+;;     icicle-abort-minibuffer-input: If minibuffer not active, just kill buffer *Completions*.
+;;     icicle-execute-extended-command-1, icicle-insert-thesaurus-entry, icicle-search-action:
+;;       Ensure orig-window is live before using it.
+;; 2006/08/23 dadams
+;;     Added: icicle-delete-window(s).
+;;     Added soft require of frame-cmds.el.
+;; 2006/08/22 dadams
+;;     icicle-execute-extended-command-1: Bind this-command, don't set it (fixes C-next).
+;;     icicle-help-on-candidate: If no last candidate, then reset to first matching candidate.
+;;     icicle-*-candidate-action, icicle-help-on-*-candidate: save-window-excursion.
+;; 2006/08/20 dadams
+;;     icicle-find-file*: Use diredp-find-a-file* in Dired mode (Emacs 22 or later).
+;;     Bug fix: icicle-candidate-action: Use icicle-*-candidates, not icicle-next-*-candidate.
+;;              icicle-next-*-candidate(-action): Set icicle-current-completion-mode.
+;; 2006/08/18 dadams
+;;     Added: icicle-Info-goto-node(-(action|cmd)).
+;;     icicle-candidate-action: If no icicle-last-completion-candidate, use first candidate.
+;; 2006/08/15 dadams
+;;     Added: icicle-help-on-*-*-candidate,icicle-mouse-help-on-candidate.
+;;     No longer put icicle-candidate-action-command property on symbols (not used).
+;;     Added: icicle-raise-Completions-frame.
+;;     icicle*-candidate-action, icicle-help-on-candidate: Use icicle-raise-Completions-frame.
+;;     icicle-help-on-candidate: Can use it from *Completions* too now.
+;;                               Use icicle-barf-if-outside-Completions-and-minibuffer.
+;; 2006/08/13 dadams
+;;     Added: icicle-Info-index(-(action|cmd)).
+;; 2006/08/04 dadams
+;;     icicle-*-complete-1, icicle-prefix-word-complete, icicle-keep-only-past-inputs:
+;;       Set icicle-last-completion-command to the explicit command, not this-command.
+;;     icicle-history: Call icicle-last-completion-command, not icicle-apropos-complete.
+;;     icicle-apropos-complete-1, icicle-narrow-candidates:
+;;       Removed binding of icicle-apropos-completing-p (not used).
+;;     Added: icicle-plist, icicle-remove-Completions-window, icicle-pp-eval-expression.
+;;     Added soft require of pp+.el.
+;;     icicle-exit-minibuffer, icicle-minibuffer-complete-and-exit,
+;;       icicle-mouse-choose-completion, icicle-abort-minibuffer-input,
+;;       icicle-(apropos|prefix)-complete-1, icicle-keep-only-past-inputs,
+;;       icicle-insert-thesaurus-entry-cand-fn: Use icicle-remove-Completions-window.
+;;     icicle-doc: Treat doc of faces also.
+;;     icicle-non-whitespace-string-p: Added doc string.
+;; 2006/08/03 dadams
+;;     Added:
+;;       icicle-comint-command, icicle-insert-kill, icicle-insert-for-yank,icicle-yank-insert.
+;;     Bound icicle-comint-command to C-c TAB in comint-mode.
+;;     icicle-search, icicle-comint-search: Cleaned up doc string.
+;; 2006/08/02 dadams
+;;     icicle-comint-search: Mention *-prompt-pattern.  Thx to Kevin Rodgers.
+;;     icicle-insert-string-from-variable: Added more variables to the completing-read alist.
+;; 2006/07/29 dadams
+;;     Added: icicle-dispatch-C-., toggle-icicle-search-cleanup, icicle-toggle-search-cleanup.
+;; 2006/07/23 dadams
+;;     Added: icicle-toggle-transforming.
+;;     icicle-comint-search: Bind icicle-transform-function to icicle-remove-duplicates.
+;; 2006/07/22 dadams
+;;     Added: icicle-comint-search, icicle-comint-send-input, icicle-comint-get-*-input,
+;;            icicle-comint-get-final-choice, icicle-search-generic.
+;;     icicle-search: Added require-match arg for non-interactive calls.
+;;                    Run the hooks if no match and no match required, and if we didn't cycle.
+;;                    Return final choice as value (not used yet).
+;;     icicle-insert-string-from-variable: Use buffer-local value of variable, if there is one.
+;;     icicle-insert-string-from-variable:
+;;       Make sure we use the buffer-local value of the variable, if there is one
+;;       Added comint-prompt-regexp to regexp list.
+;;     Added mode hooks for icicle-compilation-search and icicle-comint-send-input.
+;; 2006/07/20 dadams
+;;     Renamed icicle-arrows-respect-* to icicle-cycling-respects-completion-mode-flag.
+;; 2006/07/19 dadams
+;;     Applied patch from Damien Elmes <emacs@repose.cx>:
+;;       Added: icicle-(next|previous)-context-candidate, icicle-scroll-completions.
+;;       icicle-switch-to-completions, icicle-switch-to-Completions-buf,
+;;         icicle-move-to-next-completion, icicle-map-action, icicle-search-action:
+;;           Use icicle-start-of-completions.
+;;       icicle-(apropos|prefix)-complete-1:
+;;         Set icicle-current-completion-type vs use icicle-arrows-respect-*-flag.
+;;         Use icicle-scroll-completions.
+;;       icicle-current-completion-in-Completions: Use point-min if no previous prop change.
+;;       icicle-keep-only-past-inputs: Use icicle-scroll-completions.
+;;     Renamed icicle-start-of-completions to icicle-start-of-candidates-in-Completions,
+;;             icicle-current-completion-type to icicle-current-completion-mode,
+;;             icicle-*-context-candidate to icicle-(next|previous)-candidate-per-mode,
+;;             icicle-scroll-completions to icicle-scroll-Completions.
+;;     icicle-(next|previous)-context-candidate: Use icicle-barf-if-outside-minibuffer.
+;;     icicle-scroll-Completions: Changed with-selected-window to Emacs 20 equivalent.
+;; 2006/07/18 dadams
+;;     icicle-search: Bind completion-ignore-case to case-fold-search.
+;;     icicle-search-highlight-all-input-matches, icicle-search-action:
+;;       Put search inside condition-case, for bad regexp.
+;;     Added: icicle-toggle-case-sensitivity, toggle-icicle-case-sensitivity.
+;; 2006/07/10 dadams
+;;     Added: icicle-search-region.  Use in search functions.  Thx to Le Wang.
+;; 2006/07/08 dadams
+;;     icicle-search-highlight-all-input-matches: Use *-current-*, not *-current-raw-*.
+;;     icicle-execute-extended-command-1:
+;;       First try a string candidate as arg, then read it to convert it to symbol or number.
+;;       Reset focus back to the minibuffer, in action function.
+;; 2006/07/07 dadams
+;;     Added: icicle-alternative-sort.
+;;     icicle-imenu: Show *Completions* initially for submenu choice (only).
+;;     icicle-execute-extended-command:
+;;       Echo prefix arg in prompt.  Thx: *.dhcp.mdsn.wi.charter.com
+;; 2006/07/06 dadams
+;;     Added (eval-when-compile (require 'icicles-mac)).
+;; 2006/07/05 dadams
+;;     Renamed: icicle-current-regexp-input to icicle-current-raw-input.
+;;     icicle-prefix-complete-1: Don't set icicle-current-raw-input.
+;; 2006/07/04 dadams
+;;     icicle-prefix-complete-1: No longer calculate common prefix and set current input to it.
+;;     Added plist entries to categorize commands:
+;;       icicle-(cycling|completing|candidate-action)-command.
+;;     icicle-(apropos|prefix)-complete-1, icicle-prefix-word-complete,
+;;     icicle-switch-to-Completions-buf, icicle-keep-only-past-inputs, icicle-history:
+;;       Use icicle-cycling-command property.
+;;     icicle-apropos-complete-1: Removed regexp-p arg in call to icicle-save-or-restore-input.
+;; 2006/07/03 dadams
+;;     icicle-(apropos|prefix)-complete-1: deactivate mark after inserting current input.
+;; 2006/06/18 dadams
+;;     icicle-apropos-complete-1, icicle-narrow-candidates: Bind icicle-apropos-completing-p.
+;; 2006/06/09 dadams
+;;     Bug fixes: Picked up matching subdir as default dir, even if there other files match.
+;;                  Thx to Andrey Zhdanov.
+;;                Empty directory not treated as a match.
+;;     icicle-(apropos|prefix)-complete-1:
+;;       If input matches an empty directory, then use that directory as the sole completion.
+;;       Do not expand file-name input before call icicle-file-name-*-candidates.
+;;     icicle-retrieve-last-input: Use insert, not icicle-insert-input (no longer used).
+;;                                 (Input backslashes reverted to slashes.)
+;; 2006/06/08 dadams
+;;     Bug fix: Could not complete after cycling file names.  Thx to Andrey Zhdanov.
+;;     icicle-insert-input: Use icicle-expand-file-name.
+;;     icicle-prefix-complete-1:
+;;       Expand file-name input before call icicle-file-name-prefix-candidates.
+;;       Expand icicle-last-completion-candidate if it is a directory name.
+;; 2006/05/30 dadams
+;;     icicle-erase-minibuffer-or-history-element: Fix for consecutive deletions.
+;; 2006/05/26 dadams
+;;     Added: icicle-erase-minibuffer-or-history-element.
+;; 2006/05/19 dadams
+;;     Renamed icicle-inhibit-reminder* to icicle-reminder*.
+;;     icicle-narrow-candidates: Bind icicle-reminder-prompt-flag to nil, not t.
+;; 2006/05/16 dadams
+;;     Added: icicle-kill(-a)-buffer.
+;; 2006/05/15 dadams
+;;     Renamed: icicle-completion-nospace-flag to icicle-ignore-space-prefix-flag.
+;;     icicle-candidate-set-complement: Put back icicle-ignore-space-prefix-flag.
+;;     icicle-buffer(-other-window): Bind icicle-buffer-ignore-space-prefix-flag.
+;;     Added: icicle-toggle-ignored-space-prefix, toggle-icicle-ignored-space-prefix.
+;; 2006/05/13 dadams
+;;     icicle-occur: Make icicle-search-main-regexp-others unnoticeable instead of
+;;                   setting icicle-search-highlight-all-flag to nil.
+;;     icicle-candidate-set-complement: Use nil, not icicle-completion-nospace-flag.
+;;     Renamed: icicle-search-imenu to icicle-imenu,
+;;              icicle-search-imenu-in-buffer-p to icicle-imenu-in-buffer-p.
+;; 2006/05/12 dadams
+;;     icicle-search-imenu: Remove unmatched submenus.  Error if no imenu for the buffer.
+;;     Added: icicle-search-imenu-in-buffer-p.
+;;     icicle-insert-string-at-point: Use icicle-barf-if-outside-minibuffer.
+;;     Moved to icicles-fn.el: icicle-barf-if-outside-*.
+;;     Moved some commands to minibuffer-cmds section from top-level cmds section.
+;; 2006/05/09 dadams
+;;     Added: icicle-customize-icicles-group, icicle-send-bug-report, icicle-customize-button.
+;; 2006/04/30 dadams
+;;     Added: icicle-map, icicle-map-action.
+;;     icicle-filter-alist: Corrected and simplified.
+;;     icicle-search: Corrected cand-nb adjustment when cycle with action fns.
+;;     Renamed: icicle-search-action-fn to icicle-search-action,
+;;              icicle-search-candidates to icicle-candidates-alist.
+;; 2006/04/28 dadams
+;;     icicle-retrieve-last-input, icicle-(apropos|prefix)-complete-1:
+;;       Use icicle-highlight-initial-whitespace.
+;; 2006/04/25 dadams
+;;     icicle-completion-help: Emacs 21.3's help-insert-xref-button signature is different.
+;; 2006/04/16 dadams
+;;     Added: icicle-search-imenu.
+;;     icicle-search: Bug fixes:
+;;       Treat completion without cycling: error or singleton go-to.
+;;       Only subtract one from candidate number for C- cycling, not regular cycling.
+;; 2006/04/14 dadams
+;;     icicle-search:
+;;       Bug fix: Position was off by one.
+;;       Highlight input match inside each main regexp match (or not).
+;;         Bind icicle-update-input-hook and icicle-incremental-completion-flag.
+;;       Extract code to define icicle-search-action-fn.
+;;       Use icicle-search-candidates instead of local variable search-candidates.
+;;       Respect icicle-search-cleanup-flag.
+;;     Added: icicle-search-highlight-*, icicle-search-action-fn,
+;;            icicle-(insert|save)-text-(from|to)-variable.
+;;     Renamed icicle-search-refined-regexp to icicle-search-current-input.
+;; 2006/04/09 dadams
+;;     icicle-(apropos|prefix)-complete-1: Deal with icicle-arrows-respect-*-flag.
+;;     Moved here from icicles-fn.el: icicle-customize-apropos*, icicle-repeat-complex-command.
+;; 2006/04/07 dadams
+;;     icicle-search: Highlight all occurrences at once (like isearch highlight, but not lazy).
+;;                    Error if no match for initial regexp.
+;;     icicle-occur: Bind icicle-search-highlight-all-flag to nil: don't highlight each line.
+;; 2006/04/02 dadms
+;;     Added: icicle-toggle-regexp-quote, icicle-find-file*-w-wildcards.
+;;     icicle-find-file*: Use icicle-find-file*-w-wildcards.
+;; 2006/03/31 dadams
+;;     icicle-search: Wrap action function with unwind-protect to select minibuffer frame.
+;;                    Use completion-ignore-case when highlighting search hits.
+;;                    Protect delete-overlay with overlayp.
+;;                    Turn off region highlighting (so can see highlighting done here).
+;;                    Removed sit-for-period argument.
+;;     icicle-candidate-set-save: Use prin1 instead of pp.
+;; 2006/03/27 dadams
+;;     Added: icicle-occur.
+;;     icicle-search: Highlight also match of current regexp, inside that of regexp arg.
+;;                    Use new faces icicle-search-*-regexp.
+;;     icicle-search, icicle-switch-to-Completions-buf, icicle-move-to-next-completion:
+;;       Use new, generic icicle-place-overlay.
+;;     Removed icicle-place-search-overlay.
+;; 2006/03/26 dadams
+;;     icicle-search: Use icicle-search-overlay.  Ensure don't match twice at same position.
+;;                    Added regexp arg.  Use 0 as sit-for default.
+;;     Added: icicle-place-search-overlay.
+;; 2006/03/25 dadams
+;;     icicle-prefix-complete: Minor bug fix: Don't save try-completion if not a string.
+;;     icicle-candidate-set-(save|retrieve): Allow use of a variable to save/retrieve.
+;;     Added: icicle-candidate-set-(retrieve-from|save-to)-variable, icicle-*-no-display,
+;;            icicle-prefix-complete-1.
+;;     icicle-apropos-complete-1: Added no-display-p optional arg.
+;;     Use no-display-p arg in calls to icicle-display-candidates-in-Completions.
+;;     icicle-candidate-set-(retrieve-from|save-to)-cache-file: Pass a consp, not t.
+;;     icicle-candidate-set-retrieve: Don't display *Completions*.
+;; 2006/03/24 dadams
+;;     Added icicle-delete-char.
+;; 2006/03/23 dadams
+;;     icicle-candidate-set-define: Rewrote.  Can also use at top level.
+;;       Error if wrong result type.  Sort result.  Use display-completion-list and
+;;       icicle-narrow-candidates (unless at top level).
+;;     icicle-narrow-candidates: Can call from top-level (but not interactively).
+;;     icicle-candidate-set-complement: Use icicle-maybe-sort-and-strip-candidates.
+;;     Mention in doc strings of minibuffer and *Completions* functions: where, key.
+;; 2006/03/22 dadams
+;;     icicle-find-file*: Use default-directory as default, so opens directory on empty input.
+;;     icicle-prefix-complete:
+;;       Save icicle-current-regexp-input.
+;;       Set icicle-current-input to common prefix.  Use it everywhere here.
+;;     Calls to icicle-display-candidates-in-Completions: no root arg now.
+;; 2006/03/21 dadams
+;;     icicle-insert-input: Bug fix: Use directory of input, not default-directory.
+;;                                   Append a slash if input itself is a directory.
+;; 2006/03/20 dadams
+;;     icicle-retrieve-last-input: Insert icicle-current-regexp-input if repeat C-l.
+;;     Added: icicle-insert-input.
+;; 2006/03/19 dadams
+;;     icicle-apropos-complete-1: Call icicle-save-or-restore-input with non-nil regexp-p arg.
+;; 2006/03/17 dadams
+;;     Added: icicle-add/update-saved-completion-set, icicle-remove-saved-completion-set,
+;;            icicle-retrieve-candidates-from-set.
+;;     Removed: icicle-cache-file.
+;;     icicle-candidate-set-retrieve: Read candidates set and use its cache file.
+;;                                    Enable recursive minibuffers.
+;;     icicle-candidate-set-save: Read candidates set and cache-file names.
+;;                                Use icicle-add/update-saved-completion-set.
+;;     icicle-barf-if-outside-minibuffer: Move interactive test to calling functions.
+;;     icicle-files-within: Moved to icicle-fn.el.
+;; 2006/03/16 dadams
+;;     Added: icicle*-saved-completion-set.
+;; 2006/03/14 dadams
+;;     icicle-narrow-candidates: Handle no-catch error.  Don't use icicle-completing-p.
+;;     icicle-candidate-set-complement:
+;;       Do what we do in icicle-candidate-set-retrieve: call icicle-narrow-candidates.
+;;     icicle-candidate-set-(retrieve|complement): Msg when display.
+;;     icicle-(apropos|prefix)-complete-1:
+;;       Removed test for last-command = icicle-candidate-set-complement.
+;; 2006/03/13 dadams
+;;     Added: icicle-candidate-set-(retrieve-from|save-to)-cache-file.
+;;     icicle-candidate-set-(retrieve|save): C-u uses cache file.
+;; 2006/03/12 dadams
+;;     Added: icicle-dired-saved-file-candidates(-other-window), icicle-locate-file*,
+;;            icicle-files-within.
+;; 2006/03/11 dadams
+;;     icicle-find-file*, icicle-delete-file*:
+;;       Reverted to simple form (moved directory control to icicles-mac.el).
+;;     icicle-keep-only-past-inputs: Expand file name relative to directory of last input.
+;; 2006/03/10 dadams
+;;     icicle-find-file*, icicle-delete-file*: Expand file name relative to dir of last input.
+;;     Renamed icicle-minibuffer-contents to icicle-minibuffer-contents-from-minibuffer.
+;; 2006/03/09 dadams
+;;     icicle-barf-if-outside-*: Removed argument - use this-command instead.
+;; 2006/03/08 dadams
+;;     icicle-bookmark: Use default value, not init value, for completing-read.
+;; 2006/03/07 dadams
+;;     icicle-doc: Save table in minibuffer-completion-table, so can access via C-RET too.
+;;     icicle-insert-thesaurus-entry, icicle-*doc:
+;;       Removed binding of icicle-incremental-completion-flag to nil.
+;;     Added: icicle-barf-if-outside-(minibuffer|Completions).  Use in appropriate commands.
+;;     Added: icicle-non-whitespace-string-p.  Use in icicle-*doc.
+;; 2006/03/06 dadams
+;;     Update doc strings of *-thesaurus*.
+;; 2006/03/05 dadams
+;;     Added: icicle-toggle-incremental-completion, toggle-icicle-incremental-completion.
+;; 2006/03/03 dadams
+;;     icicle-*doc: Clarified doc strings.  Updated prompts.
+;;     Added: icicle-help-button.  Use in icicle-completion-help.
+;; 2006/03/02 dadams
+;;     icicle-insert-thesaurus-entry, icicle-complete-thesaurus-entry:
+;;       Use synonyms-ensure-synonyms-read-from-cache.  Clarified doc strings.
+;;     icicle-complete-thesaurus-entry: Error if no word at point.  Correct looking-at regexp.
+;; 2006/03/01 dadams
+;;     Added: icicle-insert-thesaurus-entry, icicle-insert-thesaurus-entry-cand-fn,
+;;            icicle-complete-thesaurus-entry.
+;;     icicle-(previous|next)-(apropos|prefix)-candidate-action: Wrap in save-excursion.
+;;     Use icicle-clear-minibuffer instead of icicle-erase-minibuffer non-interactively.
+;;     icicle-erase-minibuffer: Use icicle-call-then-update-Completions.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Code:
