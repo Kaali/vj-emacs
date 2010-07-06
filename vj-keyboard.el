@@ -25,7 +25,6 @@
 (define-key global-map (kbd "C-c ;") 'credmp/flymake-display-err-minibuf)
 
 ;; Icicle key bindings
-(global-set-key (kbd "C-x f") 'icicle-recent-file)
 (global-set-key "\C-x\C-i" 'imenu)
 (global-set-key (kbd "C-x M-f") 'find-file-other-window)
 
@@ -50,13 +49,9 @@
 
 ;; Anything
 (define-key global-map (kbd "C-'") 'anything)
+(global-set-key (kbd "C-x f") 'anything-for-files)
 (define-key anything-map "\M-N" 'anything-next-source)
 (define-key anything-map "\M-P" 'anything-previous-source)
-
-;; Icicles
-(global-set-key (kbd "C-x f") 'icicle-recent-file)
-(global-set-key "\C-x\C-i" 'imenu)
-(global-set-key (kbd "C-x M-f") 'find-file-other-window)
 
 ;; Completion that uses many different methods to find options.
 (global-set-key (kbd "M-/") 'hippie-expand)
