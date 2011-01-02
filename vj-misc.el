@@ -1,16 +1,16 @@
 ;; Inhibit start message
 (setq inhibit-startup-message t)
 
-;; Set my PATH envvar (broke with Emacs 23)
-(setenv "PATH" (concat "/usr/local/bin:"
-                       "/opt/local/bin:"
-                       "/usr/texbin:"
-                       (concat (getenv "HOME") "/bin:")
-                       (getenv "PATH")))
-(setq exec-path (append exec-path '("/usr/local/bin"
-                                    "/opt/local/bin"
-                                    "/usr/texbin:"
-                                    (concat (getenv "HOME") "/bin"))))
+;; ;; Set my PATH envvar (broke with Emacs 23)
+;; (setenv "PATH" (concat "/usr/local/bin:"
+;;                        "/opt/local/bin:"
+;;                        "/usr/texbin:"
+;;                        (concat (getenv "HOME") "/bin:")
+;;                        (getenv "PATH")))
+;; (setq exec-path (append exec-path '("/usr/local/bin"
+;;                                     "/opt/local/bin"
+;;                                     "/usr/texbin:"
+;;                                     (concat (getenv "HOME") "/bin"))))
 
 ;; Sane mouse wheel behaviour
 (setq mouse-wheel-progressive-speed nil)
