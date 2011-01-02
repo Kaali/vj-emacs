@@ -14,15 +14,17 @@
 (add-to-list 'load-path dotfiles-dir)
 
 ;; Add all top-level subdirectories of .emacs.d to the load path
-(progn (cd dotfiles-dir)
-       (normal-top-level-add-subdirs-to-load-path))
+(let ((default-directory dotfiles-dir))
+  (normal-top-level-add-subdirs-to-load-path))
 
 ;; Keep third party libraries seperate in ~/.emacs.d/vendor
 (setq vendor-dir (concat dotfiles-dir "vendor/"))
 (add-to-list 'load-path vendor-dir)
-(progn (cd vendor-dir)
-       (normal-top-level-add-subdirs-to-load-path))
+(let ((default-directory vendor-dir))
+  (normal-top-level-add-subdirs-to-load-path))
 
+;; Reverse load-path so that my packages override distro packages
+(setq load-path (reverse load-path))
 
 ;; Load ELPA
 (load-library "vj-elpa")
