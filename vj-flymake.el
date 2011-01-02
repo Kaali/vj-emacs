@@ -39,11 +39,5 @@
          flymake-master-cleanup)
         ("\\.java\\'" flymake-simple-make-java-init
          flymake-simple-java-cleanup)
-        ("[0-9]+\\.tex\\'" flymake-master-tex-init
-         flymake-master-cleanup)
-        ("\\.tex\\'" flymake-simple-tex-init)
         ("\\.idl\\'" flymake-simple-make-init)))
 (add-hook 'find-file-hook 'flymake-find-file-hook)
-
-(defun flymake-get-tex-args (file-name)
-  (list "/usr/texbin/latex" (list "-file-line-error-style" file-name)))
