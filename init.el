@@ -41,7 +41,7 @@
 (load-library "vj-c")
 (load-library "vj-visual")
 (load-library "vj-window-management")
-(load-library "vj-flyspell")
+;; (load-library "vj-flyspell")
 (load-library "vj-yasnippet")
 (load-library "vj-python")
 (load-library "vj-dired")
