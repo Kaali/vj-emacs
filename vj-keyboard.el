@@ -25,7 +25,7 @@
 (define-key global-map (kbd "C-c ;") 'credmp/flymake-display-err-minibuf)
 
 ;; Icicle key bindings
-(global-set-key "\C-x\C-i" 'imenu)
+(global-set-key "\M-i" 'imenu)
 (global-set-key (kbd "C-x M-f") 'find-file-other-window)
 
 ;; Bind smart-split

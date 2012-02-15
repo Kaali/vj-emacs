@@ -29,13 +29,27 @@
                     :underline "#ff0000")
 
 
+(defun flymake-clang-c++-init ()
+  (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                     'flymake-create-temp-inplace))
+         (local-file (file-relative-name
+                      temp-file
+                      (file-name-directory buffer-file-name))))
+    (list "clang++"
+          (append
+           (list "-fsyntax-only" "-fno-color-diagnostics")
+           (split-string ac-clang-flags)
+           (list local-file)))))
+
 ;; Set Flymakebale file extensions
 (setq flymake-allowed-file-name-masks
       '(("\\.c\\'" flymake-simple-make-init)
-        ("\\.cpp\\'" flymake-simple-make-init)
+        ("\\.cpp\\'" flymake-clang-c++-init)
+        ("\\.m\\'" flymake-clang-c++-init)
+        ("\\.mm\\'" flymake-clang-c++-init)
         ("\\.cs\\'" flymake-simple-make-init)
         ("\\.pl\\'" flymake-perl-init)
-        ("\\.h\\'" flymake-master-make-header-init
+        ("\\.h\\'" flymake-clang-c++-init
          flymake-master-cleanup)
         ("\\.java\\'" flymake-simple-make-java-init
          flymake-simple-java-cleanup)
