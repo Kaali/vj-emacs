@@ -25,3 +25,8 @@ easy_install ropemacs
 # Install pylint
 easy_install pylint
 
+# Install auto complete
+cd auto-complete-1.3.1
+make byte-compile
+cp -r dict ../../
+

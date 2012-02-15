@@ -54,7 +54,8 @@
 (define-key anything-map "\M-P" 'anything-previous-source)
 
 ;; Completion that uses many different methods to find options.
-(global-set-key (kbd "M-/") 'hippie-expand)
+;;(global-set-key (kbd "M-/") 'hippie-expand)
+(global-set-key (kbd "M-/") 'auto-complete)
 
 ;; Help should search more than just commands
 (global-set-key (kbd "C-h a") 'apropos)
@@ -70,3 +71,6 @@
 
 ;; Remember
 (global-set-key (kbd "C-c M-r") 'remember)
+
+;; C programming
+(global-set-key (kbd "C-c o") 'ff-find-other-file)
