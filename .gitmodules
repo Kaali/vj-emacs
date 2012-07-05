@@ -7,3 +7,6 @@
 [submodule "vendor/remember"]
 	path = vendor/remember
 	url = git://repo.or.cz/remember-el.git
+[submodule "vendor/evil"]
+	path = vendor/evil
+	url = git://gitorious.org/evil/evil.git
