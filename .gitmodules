@@ -10,3 +10,6 @@
 [submodule "vendor/evil"]
 	path = vendor/evil
 	url = git://gitorious.org/evil/evil.git
+[submodule "vendor/mark-multiple"]
+	path = vendor/mark-multiple
+	url = https://github.com/magnars/mark-multiple.el.git
