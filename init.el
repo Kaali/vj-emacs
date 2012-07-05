@@ -67,6 +67,7 @@
 (load-library "vj-calc")
 (load-library "vj-paredit")
 (load-library "vj-evil")
+(load-library "vj-undotree")
 
 ;; Keep last as it requires some of the previous libraries loaded
 (load-library "vj-keyboard")
