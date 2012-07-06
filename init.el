@@ -51,7 +51,7 @@
 (load-library "vj-osx")
 (load-library "vj-cua")
 (load-library "vj-magit")
-;; (load-library "vj-flymake")
+(load-library "vj-flymake")
 (load-library "vj-ediff")
 (load-library "vj-winner")
 (load-library "vj-erc")

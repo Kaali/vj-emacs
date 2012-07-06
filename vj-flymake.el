@@ -36,10 +36,9 @@
                       temp-file
                       (file-name-directory buffer-file-name))))
     (list "clang++"
-          (append
-           (list "-fsyntax-only" "-fno-color-diagnostics")
-           (split-string ac-clang-flags)
-           (list local-file)))))
+          (append (list "-fsyntax-only" "-fno-color-diagnostics" "-fno-show-column")
+                  ac-clang-flags
+                  (list local-file)))))
 
 ;; Set Flymakebale file extensions
 (setq flymake-allowed-file-name-masks
@@ -55,3 +54,5 @@
          flymake-simple-java-cleanup)
         ("\\.idl\\'" flymake-simple-make-init)))
 (add-hook 'find-file-hook 'flymake-find-file-hook)
+
+(setq flymake-gui-warnings-enabled nil)

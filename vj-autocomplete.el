@@ -23,8 +23,8 @@
 (add-hook 'c-mode-common-hook 'my-ac-cc-mode-setup)
 
 (add-hook 'emacs-lisp-mode-hook 'ac-emacs-lisp-mode-setup)
-;;(add-hook 'c-mode-common-hook 'ac-cc-mode-setup)
-;;(add-hook 'ruby-mode-hook 'ac-ruby-mode-setup)
 (add-hook 'css-mode-hook 'ac-css-mode-setup)
 (add-hook 'auto-complete-mode-hook 'ac-common-setup)
+
+(add-to-list 'ac-modes 'objc-mode)
 (global-auto-complete-mode t)
