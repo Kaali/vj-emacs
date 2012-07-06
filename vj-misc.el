@@ -52,3 +52,5 @@
 ;; Don't clutter up directories with backup files
 (setq backup-directory-alist `(("." . ,(expand-file-name
                                         (concat dotfiles-dir "backups")))))
+
+(setq require-final-newline t)
