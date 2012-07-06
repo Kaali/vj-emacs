@@ -1,12 +1,14 @@
 ;;; vline.el --- show vertical line (column highlighting) mode.
 
-;; Copyright (C) 2002, 2008, 2009 by Taiki SUGAWARA <buzz.taiki@gmail.com>
+;; Copyright (C) 2002, 2008-2012 by Taiki SUGAWARA <buzz.taiki@gmail.com>
 
 ;; Author: Taiki SUGAWARA <buzz.taiki@gmail.com>
+;; Maintainer: Taiki SUGAWARA <buzz.taiki@gmail.com>
 ;; Keywords: faces, editing, emulating
-;; Version: 1.09
-;; Time-stamp: <2009-10-12 16:55:13 UTC taiki>
+;; Version: 1.11
+;; Time-stamp: <2012-01-08 12:40:18 UTC taiki>
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/vline.el
+;; URL: http://bitbucket.org/buzztaiki/elisp/src/tip/vline.el
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,22 +25,34 @@
 ;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
 
-;;; Usage
+;;; Commentary:
+
 ;; put followings your .emacs
 ;;   (require 'vline)
 ;;
-;; if you display a vertical line, type M-x vline-mode. `vline-mode' doesn't
-;; effect other buffers, because it is a buffer local minor mode. if you hide
+;; if you display a vertical line, type M-x vline-mode.  `vline-mode' doesn't
+;; effect other buffers, because it is a buffer local minor mode.  if you hide
 ;; a vertical line, type M-x vline-mode again.
 ;;
 ;; if you display a vertical line in all buffers, type M-x vline-global-mode.
 ;;
-;; `vline-style' provides a display style of vertical line. see
+;; `vline-style' provides a display style of vertical line.  see
 ;; `vline-style' docstring.
 ;;
-;; if you don't want to visual line highlighting (ex. for performance issue), please to set `vline-visual' to nil.
+;; if you don't want to visual line highlighting (ex.  for performance
+;; issue), please to set `vline-visual' to nil.
+;;
+;; if you don't want to use timer (ex.  you want to highlight column
+;; during moving cursors), please to set `vline-use-timer' to nil.
 
-;;; Changes
+;;; Change Log:
+
+;; 2012-01-08 taiki
+;; fix for the Lint warnings.
+
+;; 2010-02-02 taiki
+;; improve performance.
+
 ;; 2009-08-26 taiki
 ;; support org-mode, outline-mode
 
@@ -63,7 +77,7 @@
 ;; fix coding-system problem.
 ;; - Added vline-multiwidth-space-list
 ;; - Use ucs code-point for japanese fullwidth space.
-;; 
+;;
 ;; 2008-01-22 taiki
 ;; applied patch from Lennart Borgman
 ;; - Added :group 'vline
@@ -85,9 +99,10 @@
    ?\t
    (decode-char 'ucs #x3000)		; japanese fullwidth space
    ))
+(defvar vline-timer nil)
 
 (defcustom vline-style 'face
-  "*This variable holds vertical line display style.
+  "This variable holds vertical line display style.
 Available values are followings:
 `face'	    : use face.
 `compose'   : use composit char.
@@ -101,39 +116,49 @@ Available values are followings:
 
 (defface vline
   '((t (:background "light steel blue")))
-  "*A default face for vertical line highlighting."
+  "A default face for vertical line highlighting."
   :group 'vline)
 
 (defface vline-visual
   '((t (:background "gray90")))
-  "*A default face for vertical line highlighting in visual lines."
+  "A default face for vertical line highlighting in visual lines."
   :group 'vline)
 
 (defcustom vline-face 'vline
-  "*A face for vertical line highlighting."
+  "A face for vertical line highlighting."
   :type 'face
   :group 'vline)
 
 (defcustom vline-visual-face 'vline-visual
-  "*A face for vertical line highlighting in visual lines."
+  "A face for vertical line highlighting in visual lines."
   :type 'face
   :group 'vline)
 
 (defcustom vline-current-window-only nil
-  "*If non-nil then show column in current window only.
-If the buffer is shown in several windows then show column only
+  "If non-nil then highlight column in current window only.
+If the buffer is shown in several windows then highlight column only
 in the currently selected window."
   :type 'boolean
   :group 'vline)
 
 (defcustom vline-visual t
-  "*If non-nil then show column in visual lines.
+  "If non-nil then highlight column in visual lines.
 If you specified `force' then use force visual line highlighting even
 if `truncate-lines' is non-nil."
   :type '(radio
 	  (const nil)
 	  (const t)
 	  (const force))
+  :group 'vline)
+
+(defcustom vline-use-timer t
+  "If non-nil, use idle timer instead of (post|after)-command-hook."
+  :type 'boolean
+  :group 'vline)
+
+(defcustom vline-idle-time 0.02
+  "Idle time for highlighting column."
+  :type 'number
   :group 'vline)
 
 ;;;###autoload
@@ -145,24 +170,21 @@ if `truncate-lines' is non-nil."
   (if vline-mode
       (progn
 	(add-hook 'pre-command-hook 'vline-pre-command-hook nil t)
-	(add-hook 'post-command-hook 'vline-post-command-hook nil t))
+	(if vline-use-timer
+	    (vline-set-timer)
+	  (add-hook 'post-command-hook 'vline-post-command-hook nil t)))
+    (vline-cancel-timer)
     (vline-clear)
     (remove-hook 'pre-command-hook 'vline-pre-command-hook t)
     (remove-hook 'post-command-hook 'vline-post-command-hook t)))
 
 ;;;###autoload
-(define-minor-mode vline-global-mode
-  "Display vertical line mode as globally."
-  :global t
-  :lighter " VL"
-  :group 'vline
-  (if vline-global-mode
-      (progn
-	(add-hook 'pre-command-hook 'vline-global-pre-command-hook)
-	(add-hook 'post-command-hook 'vline-global-post-command-hook))
-    (vline-clear)
-    (remove-hook 'pre-command-hook 'vline-global-pre-command-hook)
-    (remove-hook 'post-command-hook 'vline-global-post-command-hook)))
+(define-global-minor-mode vline-global-mode
+  vline-mode
+  (lambda ()
+    (unless (minibufferp)
+      (vline-mode 1)))
+  :group 'vline)
 
 (defun vline-pre-command-hook ()
   (when (and vline-mode (not (minibufferp)))
@@ -172,12 +194,17 @@ if `truncate-lines' is non-nil."
   (when (and vline-mode (not (minibufferp)))
     (vline-show)))
 
-(defun vline-global-pre-command-hook ()
-  (when (and vline-global-mode (not (minibufferp)))
-    (vline-clear)))
+(defun vline-set-timer ()
+  (setq vline-timer
+	(run-with-idle-timer
+	 vline-idle-time t 'vline-timer-callback)))
 
-(defun vline-global-post-command-hook ()
-  (when (and vline-global-mode (not (minibufferp)))
+(defun vline-cancel-timer ()
+  (when (timerp vline-timer)
+    (cancel-timer vline-timer)))
+
+(defun vline-timer-callback ()
+  (when (and vline-mode (not (minibufferp)))
     (vline-show)))
 
 (defun vline-clear ()
@@ -192,7 +219,7 @@ if `truncate-lines' is non-nil."
   (or (eq vline-visual 'force)
       (and (not truncate-lines)
 	   vline-visual)))
-  
+
 (defsubst vline-current-column ()
   (if (or (not (vline-visual-p))
 	  ;; margin for full-width char
@@ -215,6 +242,13 @@ if `truncate-lines' is non-nil."
       (- (move-to-column (+ bol-col col))
 	 bol-col))))
 
+(defsubst vline-invisible-p (pos)
+  (let ((inv (get-char-property pos 'invisible)))
+    (and inv
+	 (or (eq buffer-invisibility-spec t)
+	     (memq inv buffer-invisibility-spec)
+	     (assq inv buffer-invisibility-spec)))))
+
 (defsubst vline-forward (n)
   (unless (memq n '(-1 0 1))
     (error "n(%s) must be 0 or 1" n))
@@ -223,13 +257,13 @@ if `truncate-lines' is non-nil."
 	(forward-line n)
 	;; take care of org-mode, outline-mode
 	(when (and (not (bobp))
-		   (invisible-p (1- (point))))
+		   (vline-invisible-p (1- (point))))
 	  (goto-char (1- (point))))
-	(when (invisible-p (point))
+	(when (vline-invisible-p (point))
 	  (if (< n 0)
-	      (while (and (not (bobp)) (invisible-p (point)))
+	      (while (and (not (bobp)) (vline-invisible-p (point)))
 		(goto-char (previous-char-property-change (point))))
-	    (while (and (not (bobp)) (invisible-p (point)))
+	    (while (and (not (bobp)) (vline-invisible-p (point)))
 	      (goto-char (next-char-property-change (point))))
 	    (forward-line 1))))
     (vertical-motion n)))
@@ -346,5 +380,10 @@ if `truncate-lines' is non-nil."
 	    (vline-forward -1)))))))
 
 (provide 'vline)
+
+;;; Local Variables:
+;;; time-stamp-format: "%:y-%02m-%02d %02H:%02M:%02S %Z %u"
+;;; time-stamp-line-limit: 16
+;;; End:
 
 ;;; vline.el ends here

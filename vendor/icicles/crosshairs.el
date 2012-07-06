@@ -4,12 +4,12 @@
 ;; Description: Highlight the current line and column.
 ;; Author: Drew Adams
 ;; Maintainer: Drew Adams
-;; Copyright (C) 2006-2009, Drew Adams, all rights reserved.
+;; Copyright (C) 2006-2012, Drew Adams, all rights reserved.
 ;; Created: Fri Sep 08 13:09:19 2006
 ;; Version: 22.0
-;; Last-Updated: Sat Aug  1 15:17:53 2009 (-0700)
+;; Last-Updated: Sun Jan  1 14:28:02 2012 (-0800)
 ;;           By: dradams
-;;     Update #: 373
+;;     Update #: 407
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/crosshairs.el
 ;; Keywords: faces, frames, emulation, highlight, cursor, accessibility
 ;; Compatibility: GNU Emacs: 22.x, 23.x
@@ -58,7 +58,8 @@
 ;;
 ;;  User options defined here:
 ;;
-;;    `crosshairs-mode', `crosshairs-vline-same-face-flag'.
+;;    `crosshairs-mode', `crosshairs-overlay-priority',
+;;    `crosshairs-vline-same-face-flag'.
 ;;
 ;;  Commands defined here:
 ;;
@@ -80,8 +81,13 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
-;;; Change log:
+;;; Change Log:
 ;;
+;; 2011/01/03 dadams
+;;     Added autoload cookies for defgroup, defcustoms, commands.
+;; 2010/06/29 dadams
+;;     Added: crosshairs-overlay-priority.
+;;     crosshairs-(un)highlight: Set/remove priority if crosshairs-overlay-priority.
 ;; 2008/09/03 dadams
 ;;     crosshairs-mode: Don't set previous state if explicit ARG.
 ;;                      Added message indicating position.
@@ -137,6 +143,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;###autoload
 (defgroup crosshairs nil
   "Highlight the current line and column."
   :prefix "crosshairs-"
@@ -151,6 +158,15 @@ Don't forget to mention your Emacs and library versions."))
   :link '(url-link :tag "Download"
           "http://www.emacswiki.org/cgi-bin/wiki/crosshairs.el"))
 
+;;;###autoload
+(defcustom crosshairs-overlay-priority nil
+  "*Priority to use for overlay `global-hl-line-overlay'."
+  :type '(choice
+          (const   :tag "No priority (default priority)"  nil)
+          (integer :tag "Priority"  100))
+  :group 'crosshairs)
+
+;;;###autoload
 (defcustom crosshairs-vline-same-face-flag t
   "*Non-nil means use face `hl-line' for column highlighting also.
 nil means highlight the column according to the value of `vline-style'
@@ -168,6 +184,7 @@ Do NOT change this yourself; instead, use
 (defvar crosshairs-flash-col-timer (timer-create)
   "Timer used to unhighlight current column for `crosshairs-flash'.")
 
+;;;###autoload
 (define-minor-mode crosshairs-mode
     "Toggle highlighting the current line and column.
 With ARG, turn highlighting on if and only if ARG is positive."
@@ -202,7 +219,9 @@ Don't forget to mention your Emacs and library versions."))
          (column-highlight-mode -1)
          (message "Point: %d - Crosshairs mode disabled" (point)))))
 
+;;;###autoload
 (defalias 'toggle-crosshairs-when-idle 'crosshairs-toggle-when-idle)
+;;;###autoload
 (defun crosshairs-toggle-when-idle (&optional arg)
   "Toggle highlighting the current line and column when Emacs is idle.
 With prefix argument, turn on if ARG > 0; else turn off.
@@ -231,7 +250,9 @@ You can use commands `col-highlight-set-interval' and
          (remove-hook 'pre-command-hook #'hl-line-unhighlight-now)
          (message "Turned OFF highlighting line and column when Emacs is idle."))))
 
+;;;###autoload
 (defalias 'flash-crosshairs 'crosshairs-flash)
+;;;###autoload
 (defun crosshairs-flash (&optional seconds)
   "Highlight the current line and column temporarily.
 Highlight the line for `hl-line-flash-show-period' and the column for
@@ -258,6 +279,7 @@ both for SECONDS seconds."
                                          column-period nil
                                          #'col-highlight-unhighlight t)))))
 
+;;;###autoload
 (defun crosshairs (&optional modalp)
   "Highlight current position with crosshairs.
 With no prefix arg, highlighting turns off at the next command.
@@ -266,6 +288,7 @@ With a prefix arg, highlighting stays on until you toggle it off using
   (interactive "P")
   (if modalp (crosshairs-mode 1) (crosshairs-highlight)))
 
+;;;###autoload
 (defun crosshairs-highlight (&optional mode nomsg)
   "Echo current position and highlight it with crosshairs.
 If optional arg MODE is `line-only', then highlight only the line.
@@ -297,6 +320,12 @@ Return current position as a marker."
         (setq global-hl-line-overlay (make-overlay 1 1)) ; to be moved
         (overlay-put global-hl-line-overlay 'face hl-line-face))
       (overlay-put global-hl-line-overlay 'window (selected-window))
+      (when crosshairs-overlay-priority
+        (overlay-put global-hl-line-overlay 'priority crosshairs-overlay-priority)
+        (when (boundp 'vline-overlay-table)
+          (mapcar (lambda (ov) (when (overlayp ov)
+                            (overlay-put ov 'priority crosshairs-overlay-priority)))
+                  vline-overlay-table)))
       (hl-line-move global-hl-line-overlay))
     (when (and (fboundp 'col-highlight-highlight) (not (eq mode 'line-only)))
       (redisplay t) ; Force a redisplay, or else it doesn't always show up.
@@ -308,15 +337,17 @@ Return current position as a marker."
           (message "Point: %d" (point))
         (message "Buffer: `%s', Point: %d" (current-buffer) (point))))))
 
+;;;###autoload
 (defun crosshairs-unhighlight (&optional arg)
   "Turn off crosshairs highlighting of current position.
 Optional arg nil means do nothing if this event is a frame switch."
   (interactive)
   (when (or arg (not (and (consp last-input-event)
                           (eq (car last-input-event) 'switch-frame))))
-    (when (fboundp 'col-highlight-unhighlight)
-      (col-highlight-unhighlight t))
+    (when (fboundp 'col-highlight-unhighlight) (col-highlight-unhighlight t))
     (when (and (boundp 'global-hl-line-overlay) global-hl-line-overlay)
+      (when crosshairs-overlay-priority
+        (overlay-put global-hl-line-overlay 'priority nil))
       (delete-overlay global-hl-line-overlay))
     (remove-hook 'pre-command-hook 'crosshairs-unhighlight)))
 

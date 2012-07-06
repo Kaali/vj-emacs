@@ -4,12 +4,12 @@
 ;; Description: Highlight the current column.
 ;; Author: Drew Adams
 ;; Maintainer: Drew Adams
-;; Copyright (C) 2006-2009, Drew Adams, all rights reserved.
+;; Copyright (C) 2006-2012, Drew Adams, all rights reserved.
 ;; Created: Fri Sep 08 11:06:35 2006
 ;; Version: 22.0
-;; Last-Updated: Sat Aug  1 15:18:07 2009 (-0700)
+;; Last-Updated: Fri Jan  6 08:06:32 2012 (-0800)
 ;;           By: dradams
-;;     Update #: 307
+;;     Update #: 335
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/col-highlight.el
 ;; Keywords: faces, frames, emulation, highlight, cursor, accessibility
 ;; Compatibility: GNU Emacs: 22.x, 23.x
@@ -64,6 +64,11 @@
 ;;
 ;;    (col-highlight-set-interval 6) ; Wait 6 idle secs.
 ;;
+;;  Note that `column-highlight-mode' is intentionally a global minor
+;;  mode.  If you want a local minor mode, so that highlighting
+;;  affects only a particular buffer, you can use `vline-mode' (in
+;;  `vline.el').
+;;
 ;;
 ;;  See also:
 ;;
@@ -104,8 +109,10 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
-;;; Change log:
+;;; Change Log:
 ;;
+;; 2011/01/03 dadams
+;;     Added autoload cookies for defgroup, defcustom, defface, and commands.
 ;; 2008/09/03 dadams
 ;;     col-highlight-highlight: Bind vline-current-window-only to t.
 ;; 2008/08/08 dadams
@@ -148,6 +155,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+;;;###autoload
 (defgroup column-highlight nil
   "Highlight the current column."
   :prefix "col-highlight-"
@@ -162,15 +170,18 @@ Don't forget to mention your Emacs and library versions."))
   :link '(url-link :tag "Download"
           "http://www.emacswiki.org/cgi-bin/wiki/col-highlight.el"))
 
+;;;###autoload
 (defcustom col-highlight-vline-face-flag t
   "*Non-nil means `column-highlight-mode' uses `col-highlight-face'.
 nil means that it uses `vline-face'."
   :type 'boolean :group 'column-highlight)
 
+;;;###autoload
 (defcustom col-highlight-period 1
   "*Number of seconds to highlight the current column."
   :type 'integer :group 'column-highlight)
 
+;;;###autoload
 (defface col-highlight '((t (:background "SlateGray3")))
   "*Face for current-column highlighting by `column-highlight-mode'.
 Not used if `col-highlight-vline-face-flag' is nil."
@@ -201,6 +212,7 @@ Do NOT change this yourself; instead, use
 ;; You must use `toggle-highlight-column-when-idle' to turn it on.
 (cancel-timer col-highlight-idle-timer)
 
+;;;###autoload
 (define-minor-mode column-highlight-mode
     "Toggle highlighting the current column.
 With ARG, turn column highlighting on if and only if ARG is positive.
@@ -229,13 +241,16 @@ Don't forget to mention your Emacs and library versions."))
          (remove-hook 'pre-command-hook #'col-highlight-unhighlight)
          (remove-hook 'post-command-hook #'col-highlight-highlight))))
 
+;;;###autoload
 (defalias 'toggle-highlight-column-when-idle 'col-highlight-toggle-when-idle)
+;;;###autoload
 (defun col-highlight-toggle-when-idle (&optional arg)
   "Turn on or off highlighting the current column when Emacs is idle.
 With prefix argument, turn on if ARG > 0; else turn off."
   (interactive "P")
-  (setq col-highlight-when-idle-p
-        (if arg (> (prefix-numeric-value arg) 0) (not col-highlight-when-idle-p)))
+  (setq col-highlight-when-idle-p  (if arg
+                                       (> (prefix-numeric-value arg) 0)
+                                     (not col-highlight-when-idle-p)))
   (cond (col-highlight-when-idle-p
          (timer-activate-when-idle col-highlight-idle-timer)
          (add-hook 'pre-command-hook #'col-highlight-unhighlight)
@@ -246,10 +261,11 @@ With prefix argument, turn on if ARG > 0; else turn off."
          (remove-hook 'pre-command-hook #'col-highlight-unhighlight)
          (message "Turned OFF highlighting current column when Emacs is idle."))))
 
-(defun col-highlight-set-interval (secs)
-  "Set wait until highlight current column when Emacs is idle.
-Whenever Emacs is idle for this many seconds, the current column
-will be highlighted in the face that is the value of variable
+;;;###autoload
+(defun col-highlight-set-interval (n)
+  "Set the delay before highlighting current column when Emacs is idle.
+Whenever Emacs has been idle for N seconds, the current column is
+highlighted using the face that is the value of variable
 `col-highlight-face'.
 
 To turn on or off automatically highlighting the current column
@@ -257,38 +273,42 @@ when Emacs is idle, use `\\[toggle-highlight-column-when-idle]."
   (interactive
    "nSeconds to idle, before highlighting current column: ")
   (timer-set-idle-time col-highlight-idle-timer
-                       (setq col-highlight-idle-interval secs) t))
+                       (setq col-highlight-idle-interval  n)
+                       t))
 
-
+;;;###autoload
 (defalias 'flash-column-highlight 'col-highlight-flash)
+;;;###autoload
 (defun col-highlight-flash (&optional arg)
   "Highlight the current column for `col-highlight-period' seconds.
-With a prefix argument, highlight for that many seconds."
+With a prefix ARG, highlight for that many seconds."
   (interactive)
   (col-highlight-highlight)
-  (let ((column-period col-highlight-period))
+  (let ((column-period  col-highlight-period))
     (when current-prefix-arg
-      (setq column-period (prefix-numeric-value current-prefix-arg)))
+      (setq column-period  (prefix-numeric-value current-prefix-arg)))
     (run-at-time column-period nil #'col-highlight-unhighlight)))
 
 (defun col-highlight-highlight (&optional minibuffer-also-p)
-  "Highlight current column."
+  "Highlight current column.
+This has no effect in the minibuffer, unless optional arg
+MINIBUFFER-ALSO-P is non-nil."
   (unless (and (minibufferp) (not minibuffer-also-p))
-    (let ((vline-current-window-only t))
+    (let ((vline-current-window-only  t))
       (if col-highlight-vline-face-flag
-          (let ((vline-style 'face)
-                (vline-face col-highlight-face))
+          (let ((vline-style  'face)
+                (vline-face   col-highlight-face))
             (vline-show))
         (vline-show)))))
 
 (defun col-highlight-unhighlight (&optional minibuffer-also-p)
   "Turn off highlighting of current column.
-If optional arg MINIBUFFER-ALSO-P is nil, then do nothing if the
-current buffer is the minibuffer. "
+This has no effect in the minibuffer, unless optional arg
+MINIBUFFER-ALSO-P is non-nil."
   (unless (and (minibufferp) (not minibuffer-also-p))
     (if col-highlight-vline-face-flag
-        (let ((vline-style 'face)
-              (vline-face col-highlight-face))
+        (let ((vline-style  'face)
+              (vline-face   col-highlight-face))
           (vline-clear))
       (vline-clear))))
 
