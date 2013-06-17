@@ -70,6 +70,7 @@
 (load-library "vj-evil")
 (load-library "vj-undotree")
 (load-library "vj-markmultiple")
+(load-library "vj-expandregion")
 
 ;; Keep last as it requires some of the previous libraries loaded
 (load-library "vj-keyboard")

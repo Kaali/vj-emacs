@@ -74,3 +74,7 @@
 
 ;; C programming
 (global-set-key (kbd "C-c o") 'ff-find-other-file)
+
+;; Expand-region
+(global-set-key (kbd "M-[") 'er/contract-region)
+(global-set-key (kbd "M-]") 'er/expand-region)
