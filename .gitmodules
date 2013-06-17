@@ -22,3 +22,6 @@
 [submodule "vendor/nrepl"]
 	path = vendor/nrepl
 	url = git@github.com:kingtim/nrepl.el.git
+[submodule "vendor/ac-nrepl"]
+	path = vendor/ac-nrepl
+	url = git@github.com:purcell/ac-nrepl.git
