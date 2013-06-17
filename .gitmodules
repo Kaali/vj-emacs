@@ -19,3 +19,6 @@
 [submodule "vendor/clojure-mode"]
 	path = vendor/clojure-mode
 	url = https://github.com/technomancy/clojure-mode.git
+[submodule "vendor/nrepl"]
+	path = vendor/nrepl
+	url = git@github.com:kingtim/nrepl.el.git
