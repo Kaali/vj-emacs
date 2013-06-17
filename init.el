@@ -66,6 +66,7 @@
 (load-library "vj-remember")
 (load-library "vj-calc")
 (load-library "vj-paredit")
+(load-library "vj-clojure")
 (load-library "vj-evil")
 (load-library "vj-undotree")
 (load-library "vj-markmultiple")

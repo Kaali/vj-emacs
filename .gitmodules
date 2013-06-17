@@ -16,3 +16,6 @@
 [submodule "vendor/expand-region"]
 	path = vendor/expand-region
 	url = https://github.com/magnars/expand-region.el
+[submodule "vendor/clojure-mode"]
+	path = vendor/clojure-mode
+	url = https://github.com/technomancy/clojure-mode.git
