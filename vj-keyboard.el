@@ -78,3 +78,6 @@
 ;; Expand-region
 (global-set-key (kbd "M-[") 'er/contract-region)
 (global-set-key (kbd "M-]") 'er/expand-region)
+
+;; Editing
+(global-set-key (kbd "M-j") 'join-line)
