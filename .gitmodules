@@ -25,3 +25,6 @@
 [submodule "vendor/ac-nrepl"]
 	path = vendor/ac-nrepl
 	url = git@github.com:purcell/ac-nrepl.git
+[submodule "vendor/emacs-color-theme-solarized"]
+	path = vendor/emacs-color-theme-solarized
+	url = git@github.com:sellout/emacs-color-theme-solarized.git
