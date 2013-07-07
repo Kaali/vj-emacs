@@ -71,6 +71,7 @@
 (load-library "vj-undotree")
 (load-library "vj-markmultiple")
 (load-library "vj-expandregion")
+(load-library "vj-dash")
 
 ;; Keep last as it requires some of the previous libraries loaded
 (load-library "vj-keyboard")

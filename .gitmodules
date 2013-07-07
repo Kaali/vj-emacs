@@ -28,3 +28,6 @@
 [submodule "vendor/emacs-color-theme-solarized"]
 	path = vendor/emacs-color-theme-solarized
 	url = git@github.com:sellout/emacs-color-theme-solarized.git
+[submodule "vendor/dash-at-point"]
+	path = vendor/dash-at-point
+	url = git@github.com:stanaka/dash-at-point.git
