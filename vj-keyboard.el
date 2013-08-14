@@ -81,3 +81,6 @@
 
 ;; Editing
 (global-set-key (kbd "M-j") 'join-line)
+
+;; Dash integration
+(global-set-key "\C-cd" 'dash-at-point)
